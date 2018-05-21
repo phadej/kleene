@@ -1,0 +1,5 @@
+dist/
+dist-newstyle/
+.ghc.environment.*
+
+ref/

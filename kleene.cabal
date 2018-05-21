@@ -1,0 +1,84 @@
+cabal-version:  2.0
+name:           kleene
+version:        0
+
+synopsis:       Kleene algebra
+category:       Math
+description:
+  Kleene algebra
+  .
+  Think: Regular expressions
+  .
+  Implements ideas from /Regular-expression derivatives re-examined/ by
+  Scott Owens, John Reppy and Aaron Turon
+  <https://doi.org/10.1017/S0956796808007090>
+
+homepage:       https://github.com/phadej/kleene
+bug-reports:    https://github.com/phadej/kleene/issues
+author:         Oleg Grenrus <oleg.grenrus@iki.fi>
+maintainer:     Oleg Grenrus <oleg.grenrus@iki.fi>
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+
+tested-with:
+  GHC ==7.8.4
+   || ==7.10.3
+   || ==8.0.2
+   || ==8.2.2
+   || ==8.4.2
+
+source-repository head
+  type: git
+  location: https://github.com/phadej/kleene
+
+library
+  -- GHC boot libraries
+  build-depends:
+    base                  >=4.7.0.2 && <4.12,
+    containers            >=0.5.5.1 && <0.6,
+    text                  >=1.2.3.0 && <1.3,
+    transformers          >=0.3.0.0 && <0.6
+
+  -- Other dependencies
+  build-depends:
+    base-compat-batteries >=0.10.1  && <0.11,
+    lattices              >=1.7.1   && <1.8,
+    MemoTrie              >=0.6.9   && <0.7,
+    range-set-list        >=0.1.3   && <0.2,
+    step-function         >=0.2     && <0.3,
+    regex-applicative     >=0.3.3   && <0.4,
+    QuickCheck            >=2.11.3  && <2.12
+
+  other-extensions:
+    CPP
+    DeriveFunctor
+    DeriveFoldable
+    DeriveTraversable
+    GADTs
+    OverloadedStrings
+    FlexibleInstances
+    FunctionalDependencies
+    GeneralizedNewtypeDeriving
+    StandaloneDeriving
+    UndecidableInstances
+
+  exposed-modules:
+    Kleene
+    Kleene.Classes
+    Kleene.DFA
+    Kleene.ERE
+    Kleene.Equiv
+    Kleene.Functor
+    Kleene.Monad
+    Kleene.RE
+
+  -- "Internal-ish" modules
+  exposed-modules:
+    Kleene.Internal.Partition
+    Kleene.Internal.Pretty
+    Kleene.Internal.Sets
+
+  ghc-options: -Wall
+  hs-source-dirs: src
+  default-language: Haskell2010
