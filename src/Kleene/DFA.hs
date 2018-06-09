@@ -6,6 +6,8 @@
 {-# LANGUAGE ScopedTypeVariables    #-}
 module Kleene.DFA (
     DFA (..),
+    -- * Mapping
+    mapState,
     -- * Conversions
     fromRE,
     toRE,
@@ -19,17 +21,16 @@ module Kleene.DFA (
 import Prelude ()
 import Prelude.Compat
 
+import Data.Bifunctor (bimap)
 import Algebra.Lattice   ((\/))
-import Data.IntMap       (IntMap)
-import Data.IntSet       (IntSet)
 import Data.List         (intercalate)
 import Data.Map          (Map)
 import Data.Maybe        (fromMaybe)
 import Data.RangeSet.Map (RSet)
+import Data.Set          (Set)
 
 import qualified Data.Function.Step.Discrete.Closed as SF
-import qualified Data.IntMap                        as IM
-import qualified Data.IntSet                        as IS
+import qualified Data.Set                        as Set
 import qualified Data.Map                           as Map
 import qualified Data.MemoTrie                      as MT
 import qualified Data.RangeSet.Map                  as RSet
@@ -44,21 +45,31 @@ import qualified Kleene.RE              as RE
 -- A deterministic finite automaton (DFA) over an alphabet \(\Sigma\) (type
 -- variable @c@) is 4-tuple \(Q\), \(q_0\) , \(F\), \(\delta\), where
 --
--- * \(Q\) is a finite set of states (subset of 'Int'),
--- * \(q_0 \in Q\) is the distinguised start state (@0@),
+-- * \(Q\) is a finite set of states (subset of 's'),
+-- * \(q_0 \in Q\) is the distinguised start state ('dfaInitial'),
 -- * \(F \subset Q\) is a set of final (or  accepting) states ('dfaAcceptable'), and
 -- * \(\delta : Q \times \Sigma \to Q\) is a function called the state
 -- transition function ('dfaTransition').
 --
-data DFA c = DFA
-    { dfaTransition   :: !(IntMap (SF.SF c Int))
+data DFA s c = DFA
+    { dfaTransition   :: !(Map s (SF.SF c s))
       -- ^ transition function
-    , dfaAcceptable   :: !IntSet
+    , dfaInitial      :: !s
+      -- ^ initial state
+    , dfaAcceptable   :: !(Set s)
       -- ^ accept states
-    , dfaBlackholes   :: !IntSet
+    , dfaBlackholes   :: !(Set s)
       -- ^ states we cannot escape
     }
   deriving Show
+
+mapState :: Ord s' => (s -> s') -> DFA s c -> DFA s' c
+mapState f (DFA tr ini acc bh) = DFA tr' ini' acc' bh'
+  where
+    tr'  = Map.fromList . map (bimap f (fmap f)) . Map.toList $ tr
+    ini' = f ini
+    acc' = Set.map f acc
+    bh'  = Set.map f bh
 
 -------------------------------------------------------------------------------
 -- Construction
@@ -107,7 +118,7 @@ data DFA c = DFA
 -- 1+ -> \_ -> 1 -- black hole
 -- 2 -> \_ -> 2 -- black hole
 --
-fromRE :: forall c. (Ord c, Enum c, Bounded c) => RE.RE c -> DFA c
+fromRE :: forall c. (Ord c, Enum c, Bounded c) => RE.RE c -> DFA Int c
 fromRE = fromTM
 
 -- | Convert 'ERE.ERE' to 'DFA'.
@@ -141,29 +152,30 @@ fromRE = fromTM
 --     | otherwise -> 3
 -- 3+ -> \_ -> 3 -- black hole
 --
-fromERE :: forall c. (Ord c, Enum c, Bounded c) => ERE.ERE c -> DFA c
+fromERE :: forall c. (Ord c, Enum c, Bounded c) => ERE.ERE c -> DFA Int c
 fromERE = fromTM
 
 -- | Create from 'TransitionMap'.
 --
 -- See 'fromRE' for a specific example.
-fromTM :: forall k c. (Ord k, Ord c, TransitionMap c k) => k -> DFA c
+fromTM :: forall k c. (Ord k, Ord c, TransitionMap c k) => k -> DFA Int c
 fromTM = fromTMImpl Nothing
 
 -- | Create from 'TransitonMap' minimising states with 'Equivalent'.
 --
 -- See 'fromERE' for an example.
 --
-fromTMEquiv :: forall k c. (Ord k, Ord c, TransitionMap c k, Equivalent c k) => k -> DFA c
+fromTMEquiv :: forall k c. (Ord k, Ord c, TransitionMap c k, Equivalent c k) => k -> DFA Int c
 fromTMEquiv = fromTMImpl (Just equivalent)
 
 fromTMImpl :: forall k c. (Ord k, Ord c, TransitionMap c k)
     => Maybe (k ->  k -> Bool)
     -> k
-    -> DFA c
+    -> DFA Int c
 fromTMImpl mequiv re = DFA
     { dfaTransition = transition
-    , dfaAcceptable = IS.fromList
+    , dfaInitial    = 0
+    , dfaAcceptable = Set.fromList
         [ i
         | (re', i) <- Map.toList lookupMap
         , nullable re'
@@ -171,16 +183,16 @@ fromTMImpl mequiv re = DFA
     , dfaBlackholes = blackholes
     }
   where
-    transition = IM.fromList
+    transition = Map.fromList
         [ (i, js)
         | (re', pm) <- Map.toList tm
         , let i  = fromMaybe 0 $ Map.lookup re' lookupMap
         , let js = SF.normalise $ fmap (\re'' -> fromMaybe 0 $ Map.lookup re'' lookupMap) pm
         ]
 
-    blackholes = IS.fromList
+    blackholes = Set.fromList
         [ i
-        | (i, sf) <- IM.toList transition
+        | (i, sf) <- Map.toList transition
         , sf == pure i
         ]
 
@@ -289,25 +301,25 @@ fromTMImpl mequiv re = DFA
 -- See <https://mathoverflow.net/questions/45149/can-regular-expressions-be-made-unambiguous>
 -- for the description of the algorithm used.
 --
-toRE :: forall c. (Ord c, Enum c, Bounded c) => DFA c -> RE.RE c
+toRE :: (Ord c, Enum c, Bounded c) => DFA Int c -> RE.RE c
 toRE = toKleene
 
 -- | Convert 'DFA' to 'ERE.ERE'.
-toERE :: forall c. (Ord c, Enum c, Bounded c) => DFA c -> ERE.ERE c
+toERE :: (Ord c, Enum c, Bounded c) => DFA Int c -> ERE.ERE c
 toERE = toKleene
 
 -- | Convert to any 'Kleene'.
 --
 -- See 'toRE' for a specific example.
 --
-toKleene :: forall k c. (Ord c, Enum c, Bounded c, FiniteKleene c k) => DFA c -> k
-toKleene (DFA tr acc _) = unions
-    [ re 0 j maxN
-    | j <- IS.toList acc
+toKleene :: forall k c. (Ord c, Enum c, Bounded c, FiniteKleene c k) => DFA Int c -> k
+toKleene (DFA tr ini acc _) = unions
+    [ re ini j maxN
+    | j <- Set.toList acc
     ]
   where
-    maxN | IM.null tr = 1
-         | otherwise = succ $ fst $ IM.findMax tr
+    maxN | Map.null tr = 1
+         | otherwise = succ $ fst $ Map.findMax tr
 
     {-
     -- this is useful for debug
@@ -330,7 +342,7 @@ toKleene (DFA tr acc _) = unions
     re0map :: Map (Int, Int) (RSet c)
     re0map = Map.fromListWith RSet.union
         [ ((i, j), RSet.singletonRange (lo, hi))
-        | (i, tr') <- IM.toList tr
+        | (i, tr') <- Map.toList tr
         , (lo, hi, j) <- toPieces tr'
         ]
 
@@ -366,11 +378,11 @@ toPieces' = go minBound . Map.toList where
 --
 -- prop> all (match (fromRE r)) $ take 10 $ RE.generate (curry QC.choose) 42 (r :: RE.RE Char)
 --
-instance Ord c => Match c (DFA c) where
-    match (DFA tr acc bh) = go (0 :: Int) where
-        go s _ | IS.member s bh = IS.member s acc
-        go s []                 = IS.member s acc
-        go s (c : cs)           = case IM.lookup s tr of
+instance (Ord s, Ord c) => Match c (DFA s c) where
+    match (DFA tr i acc bh) = go i where
+        go s _ | Set.member s bh = Set.member s acc
+        go s []                 = Set.member s acc
+        go s (c : cs)           = case Map.lookup s tr of
             Nothing -> False
             Just sf -> go (sf SF.! c) cs
 
@@ -397,20 +409,28 @@ instance Ord c => Match c (DFA c) where
 -- >>> map (match dfa) ["", "abc", "abcabc", "aa","abca", 'a' : 'a' : undefined]
 -- [False,False,False,True,True,True]
 --
-instance Complement c (DFA c) where
-    complement (DFA tr acc err) = DFA tr acc' err where
-        acc' = IS.difference (IM.keysSet tr) acc
+instance Ord s => Complement c (DFA s c) where
+    complement (DFA tr ini acc bh) = DFA tr ini acc' bh where
+        acc' = Set.difference (Map.keysSet tr) acc
+
+instance (Ord s, Ord c) => Derivate c (DFA s c) where
+    nullable (DFA _tr ini acc _bh) = Set.member ini acc
+
+    derivate c (DFA tr ini acc bh) = DFA tr ini' acc bh where
+        ini' = case Map.lookup ini tr of
+            Nothing -> ini -- in error case let's just stay in the same state.
+            Just sf -> sf SF.! c
 
 -------------------------------------------------------------------------------
 -- Debug
 -------------------------------------------------------------------------------
 
-instance Show c => Pretty (DFA c) where
+instance (Show s, Show c, Ord s) => Pretty (DFA s c) where
     pretty dfa = intercalate "\n"
         [ show i ++ acc ++ " -> " ++ SF.showSF sf ++ bh
-        | (i, sf) <- IM.toList (dfaTransition dfa)
-        , let acc = if IS.member i (dfaAcceptable dfa) then "+" else ""
-        , let bh = if IS.member i $ dfaBlackholes dfa then " -- black hole" else ""
+        | (i, sf) <- Map.toList (dfaTransition dfa)
+        , let acc = if Set.member i (dfaAcceptable dfa) then "+" else ""
+        , let bh = if Set.member i $ dfaBlackholes dfa then " -- black hole" else ""
         ]
 
 -- $setup
