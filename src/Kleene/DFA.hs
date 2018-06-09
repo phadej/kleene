@@ -16,24 +16,26 @@ module Kleene.DFA (
     fromTM,
     fromTMEquiv,
     toKleene,
+    toDot,
+    toDot',
     ) where
 
 import Prelude ()
 import Prelude.Compat
 
-import Data.Bifunctor (bimap)
-import Algebra.Lattice   ((\/))
-import Data.List         (intercalate)
-import Data.Map          (Map)
-import Data.Maybe        (fromMaybe)
-import Data.RangeSet.Map (RSet)
-import Data.Set          (Set)
+import Algebra.Lattice       ((\/))
+import Data.Bifunctor.Compat (bimap)
+import Data.List             (intercalate)
+import Data.Map              (Map)
+import Data.Maybe            (fromMaybe)
+import Data.RangeSet.Map     (RSet)
+import Data.Set              (Set)
 
 import qualified Data.Function.Step.Discrete.Closed as SF
-import qualified Data.Set                        as Set
 import qualified Data.Map                           as Map
 import qualified Data.MemoTrie                      as MT
 import qualified Data.RangeSet.Map                  as RSet
+import qualified Data.Set                           as Set
 
 import           Kleene.Classes
 import qualified Kleene.ERE             as ERE
@@ -420,6 +422,83 @@ instance (Ord s, Ord c) => Derivate c (DFA s c) where
         ini' = case Map.lookup ini tr of
             Nothing -> ini -- in error case let's just stay in the same state.
             Just sf -> sf SF.! c
+
+-------------------------------------------------------------------------------
+-- toDot
+-------------------------------------------------------------------------------
+
+-- | Get Graphviz dot-code of DFA.
+--
+-- >>> let dfa = fromRE $ RE.star "abc"
+-- >>> putStr $ toDot dfa
+-- digraph dfa {
+-- rankdir=LR;
+-- // states
+-- "0" [shape=doublecircle];
+-- "1" [shape=circle];
+-- "2" [shape=circle];
+-- // initial state
+-- "" [shape=none];
+-- "" -> "0";
+-- // transitions
+-- "0" -> "2"[label="a"]
+-- "1" -> "0"[label="c"]
+-- "2" -> "1"[label="b"]
+-- }
+--
+toDot :: DFA Int Char -> String
+toDot = toDot' show pure
+
+-- | More flexible version of 'toDot'.
+toDot' :: (Ord s, Ord c, Enum c, Bounded c) => (s -> String) -> (c -> String) -> DFA s c -> String
+toDot' showS showC (DFA tr ini acc bh)
+    = showString "digraph dfa {\n"
+    . showString "rankdir=LR;\n"
+    . showString "// states\n"
+    . showStates
+    . showString "// initial state\n"
+    . showInitial
+    . showString "// transitions\n"
+    . showTransitions
+    . showString "}\n"
+    $ ""
+  where
+    showStates  = foldr (.) id
+        [ showState i
+        | i <- Map.keys tr
+        , Set.member i acc || Set.notMember i bh
+        ]
+    showState s = showS' s . shape where
+        shape
+            | Set.member s acc = showString " [shape=doublecircle];\n"
+            | otherwise        = showString " [shape=circle];\n"
+
+    showInitial
+        = showString "\"\" [shape=none];\n"
+        . showString "\"\" -> "
+        . showS' ini
+        . showString ";\n"
+
+    showTransitions = foldr (.) id
+        [ showS' i
+        . showString " -> "
+        . showS' j
+        . showString "[label="
+        . label
+                . showString "]\n"
+        | (i, sf) <- Map.toList tr
+        , (lo, hi, j) <- toPieces sf
+        , Set.member j acc || Set.notMember j bh
+        , let label
+                | lo == hi
+                    = shows (showC lo)
+                | lo == minBound && hi == maxBound
+                    = shows ("-any" :: String)
+                | otherwise
+                    = shows (showC lo ++ "-" ++ showC hi)
+        ]
+
+    showS' = shows . showS
 
 -------------------------------------------------------------------------------
 -- Debug

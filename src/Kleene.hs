@@ -25,7 +25,8 @@
 --
 -- We can convert it to 'DFA' (there are 8 states)
 --
--- >>> putPretty $ fromTM re
+-- >>> let dfa = fromTM re
+-- >>> putPretty dfa
 -- 0 -> \x -> if
 --     | x <= '`'  -> 8
 --     | x <= 'a'  -> 5
@@ -40,9 +41,18 @@
 -- 2 -> ...
 -- ...
 --
+-- It's also possible to graphically visualise DFAs
+--
+-- @
+-- λ> writeFile "example.dot' ('toDot' dfa)
+-- %  dot -Tpng -oexample.png example.dot
+-- @
+--
+-- ![example.png](example.png)
+--
 -- And we can convert back from 'DFA' to 'RE':
 --
--- >>> let re' = toKleene (fromTM re) :: RE Char
+-- >>> let re' = toKleene dfa :: RE Char
 -- >>> putPretty re'
 -- ^(a(bca)*bcdefx|defx|(a(bca)*bcdefy|defy)z)$
 --

@@ -3,3 +3,5 @@ dist-newstyle/
 .ghc.environment.*
 
 ref/
+
+example.dot
