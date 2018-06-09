@@ -38,6 +38,7 @@ module Kleene.Monad (
 
 import Prelude ()
 import Prelude.Compat
+import Data.Semigroup (Semigroup (..))
 
 import Algebra.Lattice     (BoundedJoinSemiLattice (..), JoinSemiLattice (..))
 import Control.Applicative (liftA2)
@@ -101,7 +102,7 @@ instance Monad M where
 -- >>> putPretty (bottom :: M Bool)
 -- ^[]$
 --
--- prop> match (empty :: M Bool) (s :: String) === False
+-- prop> match (empty :: M Char) (s :: String) === False
 --
 empty :: M c
 empty = MChars []
@@ -114,7 +115,7 @@ empty = MChars []
 -- >>> putPretty (mempty :: M Bool)
 -- ^$
 --
--- prop> match (eps :: M Bool) s === null (s :: String)
+-- prop> match (eps :: M Char) s === null (s :: String)
 --
 eps :: M c
 eps = MAppend []
@@ -208,13 +209,15 @@ string []  = eps
 string [c] = MChars [c]
 string cs  = MAppend $ map (MChars . pure) cs
 
-instance C.Kleene c (M c) where
+instance C.Kleene  (M c) where
     empty      = empty
     eps        = eps
-    char       = char
     appends    = appends
     unions     = unions
     star       = star
+
+instance C.CharKleene c (M c) where
+    char       = char
 
 -------------------------------------------------------------------------------
 -- derivative
@@ -348,7 +351,7 @@ generator = go where
 -- >>> putPretty (toKleene re :: RE Char)
 -- ^[a-z]$
 --
-toKleene :: C.Kleene c k => M c -> k
+toKleene :: C.CharKleene c k => M c -> k
 toKleene (MChars cs)    = C.oneof cs
 toKleene (MAppend rs)   = C.appends (map toKleene rs)
 toKleene (MUnion cs rs) = C.unions (C.oneof cs : map toKleene rs)
