@@ -13,7 +13,7 @@ import Data.RangeSet.Map                  (RSet)
 
 import Kleene.Internal.Sets (dotRSet)
 
-class (BoundedJoinSemiLattice k, Semigroup k, Monoid k) => Kleene c k | k -> c where
+class (BoundedJoinSemiLattice k, Semigroup k, Monoid k) => Kleene k where
     -- | Empty regex. Doesn't accept anything.
     empty :: k
     empty = bottom
@@ -21,9 +21,6 @@ class (BoundedJoinSemiLattice k, Semigroup k, Monoid k) => Kleene c k | k -> c w
     -- | Empty string. /Note:/ different than 'empty'
     eps :: k
     eps = mempty
-
-    -- | Single character
-    char :: c -> k
 
     -- | Concatenation.
     appends :: [k] -> k
@@ -36,11 +33,15 @@ class (BoundedJoinSemiLattice k, Semigroup k, Monoid k) => Kleene c k | k -> c w
     -- | Kleene star
     star :: k -> k
 
+class Kleene k => CharKleene c k | k -> c where
+    -- | Single character
+    char :: c -> k
+
 -- | One of the characters.
-oneof :: (Kleene c k, Foldable f) => f c -> k
+oneof :: (CharKleene c k, Foldable f) => f c -> k
 oneof = unions . map char . toList
 
-class Kleene c k => FiniteKleene c k | k -> c where
+class CharKleene c k => FiniteKleene c k | k -> c where
     -- | Everything. \(\Sigma^\star\).
     everything :: k
     everything = star anyChar
