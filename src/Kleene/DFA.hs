@@ -8,6 +8,7 @@ module Kleene.DFA (
     DFA (..),
     -- * Mapping
     mapState,
+    traverseState,
     -- * Conversions
     fromRE,
     toRE,
@@ -23,14 +24,16 @@ module Kleene.DFA (
 import Prelude ()
 import Prelude.Compat
 
-import Algebra.Lattice       ((\/))
-import Data.Bifunctor.Compat (bimap)
-import Data.List             (intercalate)
-import Data.Map              (Map)
-import Data.Maybe            (fromMaybe)
-import Data.RangeSet.Map     (RSet)
-import Data.Set              (Set)
+import Algebra.Lattice           ((\/))
+import Data.Bifunctor.Compat     (bimap)
+import Data.Bitraversable.Compat (bitraverse)
+import Data.List                 (intercalate)
+import Data.Map                  (Map)
+import Data.Maybe                (fromMaybe)
+import Data.RangeSet.Map         (RSet)
+import Data.Set                  (Set)
 
+import qualified Data.ByteString                    as BS
 import qualified Data.Function.Step.Discrete.Closed as SF
 import qualified Data.Map                           as Map
 import qualified Data.MemoTrie                      as MT
@@ -72,6 +75,14 @@ mapState f (DFA tr ini acc bh) = DFA tr' ini' acc' bh'
     ini' = f ini
     acc' = Set.map f acc
     bh'  = Set.map f bh
+
+traverseState :: (Applicative f, Ord s') => (s -> f s') -> DFA s c -> f (DFA s' c)
+traverseState f (DFA tr ini acc bh) = DFA <$> tr' <*> ini' <*> acc' <*> bh'
+  where
+    tr'  = fmap Map.fromList $ traverse (bitraverse f (traverse f)) $ Map.toList tr
+    ini' = f ini
+    acc' = fmap Set.fromList $ traverse f $ Set.toList acc
+    bh'  = fmap Set.fromList $ traverse f $ Set.toList bh
 
 -------------------------------------------------------------------------------
 -- Construction
@@ -382,11 +393,19 @@ toPieces' = go minBound . Map.toList where
 --
 instance (Ord s, Ord c) => Match c (DFA s c) where
     match (DFA tr i acc bh) = go i where
-        go s _ | Set.member s bh = Set.member s acc
-        go s []                 = Set.member s acc
-        go s (c : cs)           = case Map.lookup s tr of
+        go !s _ | Set.member s bh = Set.member s acc
+        go !s []                 = Set.member s acc
+        go !s (c : cs)           = case Map.lookup s tr of
             Nothing -> False
             Just sf -> go (sf SF.! c) cs
+
+    match8 (DFA tr i acc bh) = go i where
+        go !s !_ | Set.member s bh = Set.member s acc
+        go !s bs = case BS.uncons bs of
+            Nothing      -> Set.member s acc
+            Just (c, cs) -> case Map.lookup s tr of
+                Nothing -> False
+                Just sf -> go (sf SF.! c) cs
 
 -- | Complement DFA.
 --

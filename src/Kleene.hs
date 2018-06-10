@@ -153,6 +153,8 @@ module Kleene (
     fromTMEquiv,
     toKleene,
     toDot,
+    mapState,
+    traverseState,
 
     -- * Classes
     --
@@ -173,11 +175,22 @@ module Kleene (
     --
     -- See "Kleene.Functor" for operations.
     K,
+
+    c_run,
     ) where
 
 import Kleene.Classes
-import Kleene.DFA     (DFA (..), fromTM, fromTMEquiv, toKleene, toDot)
+import Kleene.DFA
+       (DFA (..), fromTM, fromTMEquiv, mapState, toDot, toKleene,
+       traverseState)
 import Kleene.Equiv
 import Kleene.ERE     (ERE)
 import Kleene.Functor (K)
 import Kleene.RE      (RE)
+
+import Foreign (Ptr)
+import Foreign.C.Types (CChar(..), CSize(..))
+
+-- Wrong place, use sig
+foreign import ccall "run" c_run
+    :: Ptr CChar -> CSize -> Ptr CChar -> Ptr CChar -> IO ()

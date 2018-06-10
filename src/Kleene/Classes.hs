@@ -11,8 +11,10 @@ import Data.Foldable                      (toList)
 import Data.Function.Step.Discrete.Closed (SF)
 import Data.Map                           (Map)
 import Data.RangeSet.Map                  (RSet)
+import Data.Word (Word8)
 
 import qualified Data.RangeSet.Map as RSet
+import qualified Data.ByteString as BS
 
 import Kleene.Internal.Sets (dotRSet)
 
@@ -39,6 +41,9 @@ class (BoundedJoinSemiLattice k, Semigroup k, Monoid k) => Kleene k where
 class Kleene k => CharKleene c k | k -> c where
     -- | Single character
     char :: c -> k
+
+    string :: [c] -> k
+    string = appends . map char
 
 -- | One of the characters.
 oneof :: (CharKleene c k, Foldable f) => f c -> k
@@ -76,6 +81,9 @@ class Derivate c k | k -> c where
 -- | An @f@ can be used to match on the input.
 class Match c k | k -> c where
     match :: k -> [c] -> Bool
+
+    match8 :: c ~ Word8 => k -> BS.ByteString -> Bool
+    match8 k = match k . BS.unpack
 
 -- | Equivalence induced by 'Matches'.
 --
