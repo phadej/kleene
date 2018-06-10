@@ -25,7 +25,8 @@
 --
 -- We can convert it to 'DFA' (there are 8 states)
 --
--- >>> putPretty $ fromTM re
+-- >>> let dfa = fromTM re
+-- >>> putPretty dfa
 -- 0 -> \x -> if
 --     | x <= '`'  -> 8
 --     | x <= 'a'  -> 5
@@ -40,9 +41,18 @@
 -- 2 -> ...
 -- ...
 --
+-- It's also possible to graphically visualise DFAs
+--
+-- @
+-- λ> writeFile "example.dot' ('toDot' dfa)
+-- %  dot -Tpng -oexample.png example.dot
+-- @
+--
+-- ![example.png](example.png)
+--
 -- And we can convert back from 'DFA' to 'RE':
 --
--- >>> let re' = toKleene (fromTM re) :: RE Char
+-- >>> let re' = toKleene dfa :: RE Char
 -- >>> putPretty re'
 -- ^(a(bca)*bcdefx|defx|(a(bca)*bcdefy|defy)z)$
 --
@@ -134,7 +144,7 @@ module Kleene (
     RE,
     ERE,
 
-    -- * Equivalance (and partial order)
+    -- * Equivalence (and partial order)
     Equiv (..),
 
     -- * Deterministic finite automaton
@@ -142,6 +152,9 @@ module Kleene (
     fromTM,
     fromTMEquiv,
     toKleene,
+    toDot,
+    mapState,
+    traverseState,
 
     -- * Classes
     --
@@ -149,6 +162,8 @@ module Kleene (
     --
     -- See "Kleene.RE" module for a specific version with examples.
     Kleene (..),
+    CharKleene (..),
+    FiniteKleene (..),
     Derivate (..),
     Match (..),
     TransitionMap (..),
@@ -160,11 +175,22 @@ module Kleene (
     --
     -- See "Kleene.Functor" for operations.
     K,
+
+    c_run,
     ) where
 
 import Kleene.Classes
-import Kleene.DFA     (DFA (..), fromTM, fromTMEquiv, toKleene)
+import Kleene.DFA
+       (DFA (..), fromTM, fromTMEquiv, mapState, toDot, toKleene,
+       traverseState)
 import Kleene.Equiv
 import Kleene.ERE     (ERE)
 import Kleene.Functor (K)
 import Kleene.RE      (RE)
+
+import Foreign (Ptr)
+import Foreign.C.Types (CChar(..), CSize(..))
+
+-- Wrong place, use sig
+foreign import ccall "run" c_run
+    :: Ptr CChar -> CSize -> Ptr CChar -> Ptr CChar -> IO ()

@@ -263,13 +263,15 @@ string []  = eps
 string [c] = EREChars (RSet.singleton c)
 string cs  = EREAppend $ map (EREChars . RSet.singleton) cs
 
-instance (Ord c, Enum c, Bounded c) => C.Kleene c (ERE c) where
+instance (Ord c, Enum c, Bounded c) => C.Kleene (ERE c) where
     empty      = empty
     eps        = eps
-    char       = char
     appends    = appends
     unions     = unions
     star       = star
+
+instance (Ord c, Enum c, Bounded c) => C.CharKleene c (ERE c) where
+    char       = char
 
 instance (Ord c, Enum c, Bounded c) => C.FiniteKleene c (ERE c) where
     everything = everything

@@ -50,7 +50,8 @@ instance Equivalent c (r c) => Eq (Equiv r c) where
 instance (JoinSemiLattice (r c), Equivalent c (r c)) => PartialOrd (Equiv r c) where
     leq = joinLeq
 
-deriving instance Kleene     c (r c) => Kleene     c (Equiv r c)
+deriving instance Kleene       (r c) => Kleene       (Equiv r c)
+deriving instance CharKleene c (r c) => CharKleene c (Equiv r c)
 deriving instance Derivate   c (r c) => Derivate   c (Equiv r c)
 deriving instance Match      c (r c) => Match      c (Equiv r c)
 deriving instance Equivalent c (r c) => Equivalent c (Equiv r c)

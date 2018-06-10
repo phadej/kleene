@@ -208,13 +208,15 @@ string []  = eps
 string [c] = MChars [c]
 string cs  = MAppend $ map (MChars . pure) cs
 
-instance C.Kleene c (M c) where
+instance C.Kleene  (M c) where
     empty      = empty
     eps        = eps
-    char       = char
     appends    = appends
     unions     = unions
     star       = star
+
+instance C.CharKleene c (M c) where
+    char       = char
 
 -------------------------------------------------------------------------------
 -- derivative
@@ -348,7 +350,7 @@ generator = go where
 -- >>> putPretty (toKleene re :: RE Char)
 -- ^[a-z]$
 --
-toKleene :: C.Kleene c k => M c -> k
+toKleene :: C.CharKleene c k => M c -> k
 toKleene (MChars cs)    = C.oneof cs
 toKleene (MAppend rs)   = C.appends (map toKleene rs)
 toKleene (MUnion cs rs) = C.unions (C.oneof cs : map toKleene rs)

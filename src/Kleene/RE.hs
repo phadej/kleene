@@ -235,13 +235,15 @@ string []  = eps
 string [c] = REChars (RSet.singleton c)
 string cs  = REAppend $ map (REChars . RSet.singleton) cs
 
-instance (Ord c, Enum c, Bounded c) => C.Kleene c (RE c) where
+instance (Ord c, Enum c, Bounded c) => C.Kleene (RE c) where
     empty      = empty
     eps        = eps
-    char       = char
     appends    = appends
     unions     = unions
     star       = star
+
+instance (Ord c, Enum c, Bounded c) => C.CharKleene c (RE c) where
+    char       = char
 
 instance (Ord c, Enum c, Bounded c) => C.FiniteKleene c (RE c) where
     everything = everything
