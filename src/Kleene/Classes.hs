@@ -1,3 +1,4 @@
+{-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 module Kleene.Classes where
@@ -10,6 +11,8 @@ import Data.Foldable                      (toList)
 import Data.Function.Step.Discrete.Closed (SF)
 import Data.Map                           (Map)
 import Data.RangeSet.Map                  (RSet)
+
+import qualified Data.RangeSet.Map as RSet
 
 import Kleene.Internal.Sets (dotRSet)
 
@@ -58,6 +61,10 @@ class CharKleene c k => FiniteKleene c k | k -> c where
 
     -- | Any character. /Note:/ different than dot!
     anyChar :: k
+
+    notChar :: c -> k
+    default notChar :: (FiniteKleene c k, Ord c, Enum c, Bounded c) => c -> k
+    notChar = fromRSet . RSet.complement . RSet.singleton
 
 class Derivate c k | k -> c where
     -- | Does language contain an empty string?

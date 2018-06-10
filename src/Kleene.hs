@@ -144,7 +144,7 @@ module Kleene (
     RE,
     ERE,
 
-    -- * Equivalance (and partial order)
+    -- * Equivalence (and partial order)
     Equiv (..),
 
     -- * Deterministic finite automaton
@@ -152,6 +152,7 @@ module Kleene (
     fromTM,
     fromTMEquiv,
     toKleene,
+    toDot,
 
     -- * Classes
     --
@@ -159,6 +160,8 @@ module Kleene (
     --
     -- See "Kleene.RE" module for a specific version with examples.
     Kleene (..),
+    CharKleene (..),
+    FiniteKleene (..),
     Derivate (..),
     Match (..),
     TransitionMap (..),
@@ -173,7 +176,7 @@ module Kleene (
     ) where
 
 import Kleene.Classes
-import Kleene.DFA     (DFA (..), fromTM, fromTMEquiv, toKleene)
+import Kleene.DFA     (DFA (..), fromTM, fromTMEquiv, toKleene, toDot)
 import Kleene.Equiv
 import Kleene.ERE     (ERE)
 import Kleene.Functor (K)
