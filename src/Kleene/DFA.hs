@@ -4,6 +4,7 @@
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE Safe                   #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Kleene.DFA (
     DFA (..),
     -- * Conversions
@@ -14,12 +15,16 @@ module Kleene.DFA (
     fromTM,
     fromTMEquiv,
     toKleene,
+    toDot,
+    toDot',
     ) where
 
 import Prelude ()
 import Prelude.Compat
 
-import Algebra.Lattice   ((\/))
+import Algebra.Lattice
+       (BoundedLattice, BoundedMeetSemiLattice (..), Lattice,
+       MeetSemiLattice (..))
 import Data.IntMap       (IntMap)
 import Data.IntSet       (IntSet)
 import Data.List         (intercalate)
@@ -27,9 +32,10 @@ import Data.Map          (Map)
 import Data.Maybe        (fromMaybe)
 import Data.RangeSet.Map (RSet)
 
+import qualified Data.ByteString                    as BS
 import qualified Data.Function.Step.Discrete.Closed as SF
-import qualified Data.IntMap                        as IM
-import qualified Data.IntSet                        as IS
+import qualified Data.IntMap                        as IntMap
+import qualified Data.IntSet                        as IntSet
 import qualified Data.Map                           as Map
 import qualified Data.MemoTrie                      as MT
 import qualified Data.RangeSet.Map                  as RSet
@@ -37,15 +43,15 @@ import qualified Data.RangeSet.Map                  as RSet
 import           Kleene.Classes
 import qualified Kleene.ERE             as ERE
 import           Kleene.Internal.Pretty
-import qualified Kleene.RE              as RE
+import qualified Kleene.Internal.RE     as RE
 
 -- | Deterministic finite automaton.
 --
 -- A deterministic finite automaton (DFA) over an alphabet \(\Sigma\) (type
 -- variable @c@) is 4-tuple \(Q\), \(q_0\) , \(F\), \(\delta\), where
 --
--- * \(Q\) is a finite set of states (subset of 'Int'),
--- * \(q_0 \in Q\) is the distinguised start state (@0@),
+-- * \(Q\) is a finite set of states (subset of 's'),
+-- * \(q_0 \in Q\) is the distinguised start state ('dfaInitial'),
 -- * \(F \subset Q\) is a set of final (or  accepting) states ('dfaAcceptable'), and
 -- * \(\delta : Q \times \Sigma \to Q\) is a function called the state
 -- transition function ('dfaTransition').
@@ -53,6 +59,8 @@ import qualified Kleene.RE              as RE
 data DFA c = DFA
     { dfaTransition   :: !(IntMap (SF.SF c Int))
       -- ^ transition function
+    , dfaInitial      :: !Int
+      -- ^ initial state
     , dfaAcceptable   :: !IntSet
       -- ^ accept states
     , dfaBlackholes   :: !IntSet
@@ -112,15 +120,15 @@ fromRE = fromTM
 
 -- | Convert 'ERE.ERE' to 'DFA'.
 --
--- We don't always generate minimal automata:
+-- We don't always generate a minimal automata:
 --
 -- >>> putPretty $ fromERE $ "a" /\ "b"
 -- 0 -> \_ -> 1
 -- 1 -> \_ -> 1 -- black hole
 --
--- Compare this to an @complement@ example
+-- Compare this to a 'complement' example
 --
--- Using 'fromTMEquiv', we can get minimal automaton, for the cost of higher
+-- Using 'fromTMEquiv', we can get a minimal automaton, for the cost of higher
 -- complexity (slow!).
 --
 -- >>> putPretty $ fromTMEquiv $ ("a" /\ "b" :: ERE.ERE Char)
@@ -163,7 +171,8 @@ fromTMImpl :: forall k c. (Ord k, Ord c, TransitionMap c k)
     -> DFA c
 fromTMImpl mequiv re = DFA
     { dfaTransition = transition
-    , dfaAcceptable = IS.fromList
+    , dfaInitial    = 0
+    , dfaAcceptable = IntSet.fromList
         [ i
         | (re', i) <- Map.toList lookupMap
         , nullable re'
@@ -171,16 +180,16 @@ fromTMImpl mequiv re = DFA
     , dfaBlackholes = blackholes
     }
   where
-    transition = IM.fromList
+    transition = IntMap.fromList
         [ (i, js)
         | (re', pm) <- Map.toList tm
         , let i  = fromMaybe 0 $ Map.lookup re' lookupMap
         , let js = SF.normalise $ fmap (\re'' -> fromMaybe 0 $ Map.lookup re'' lookupMap) pm
         ]
 
-    blackholes = IS.fromList
+    blackholes = IntSet.fromList
         [ i
-        | (i, sf) <- IM.toList transition
+        | (i, sf) <- IntMap.toList transition
         , sf == pure i
         ]
 
@@ -289,11 +298,11 @@ fromTMImpl mequiv re = DFA
 -- See <https://mathoverflow.net/questions/45149/can-regular-expressions-be-made-unambiguous>
 -- for the description of the algorithm used.
 --
-toRE :: forall c. (Ord c, Enum c, Bounded c) => DFA c -> RE.RE c
+toRE :: (Ord c, Enum c, Bounded c) => DFA c -> RE.RE c
 toRE = toKleene
 
 -- | Convert 'DFA' to 'ERE.ERE'.
-toERE :: forall c. (Ord c, Enum c, Bounded c) => DFA c -> ERE.ERE c
+toERE :: (Ord c, Enum c, Bounded c) => DFA c -> ERE.ERE c
 toERE = toKleene
 
 -- | Convert to any 'Kleene'.
@@ -301,13 +310,13 @@ toERE = toKleene
 -- See 'toRE' for a specific example.
 --
 toKleene :: forall k c. (Ord c, Enum c, Bounded c, FiniteKleene c k) => DFA c -> k
-toKleene (DFA tr acc _) = unions
-    [ re 0 j maxN
-    | j <- IS.toList acc
+toKleene (DFA tr ini acc _) = unions
+    [ re ini j maxN
+    | j <- IntSet.toList acc
     ]
   where
-    maxN | IM.null tr = 1
-         | otherwise = succ $ fst $ IM.findMax tr
+    maxN | IntMap.null tr = 1
+         | otherwise      = succ $ fst $ IntMap.findMax tr
 
     {-
     -- this is useful for debug
@@ -321,8 +330,8 @@ toKleene (DFA tr acc _) = unions
 
     re i j k = MT.memo re' (i, j, k)
     re' (i, j, k)
-        | k <= 0    = if i == j then eps \/ r else r
-        | otherwise = re i j k' \/ (re i k' k' <> star (re k' k' k') <> re k' j k')
+        | k <= 0    = if i == j then unions [eps, r] else r
+        | otherwise = unions [re i j k', appends [re i k' k', star (re k' k' k'), re k' j k']]
       where
         r = maybe empty fromRSet $ Map.lookup (i, j) re0map
         k' = k - 1
@@ -330,7 +339,7 @@ toKleene (DFA tr acc _) = unions
     re0map :: Map (Int, Int) (RSet c)
     re0map = Map.fromListWith RSet.union
         [ ((i, j), RSet.singletonRange (lo, hi))
-        | (i, tr') <- IM.toList tr
+        | (i, tr') <- IntMap.toList tr
         , (lo, hi, j) <- toPieces tr'
         ]
 
@@ -350,7 +359,7 @@ toPieces' = go minBound . Map.toList where
 
 -- | Run 'DFA' on the input.
 --
--- Because we have analysed a language, in some cases we can determine an input
+-- Because we have analysed a language, in some cases we can determine a result
 -- without traversing all of the input.
 -- That's not the cases with 'RE.RE' 'match'.
 --
@@ -367,12 +376,20 @@ toPieces' = go minBound . Map.toList where
 -- prop> all (match (fromRE r)) $ take 10 $ RE.generate (curry QC.choose) 42 (r :: RE.RE Char)
 --
 instance Ord c => Match c (DFA c) where
-    match (DFA tr acc bh) = go (0 :: Int) where
-        go s _ | IS.member s bh = IS.member s acc
-        go s []                 = IS.member s acc
-        go s (c : cs)           = case IM.lookup s tr of
+    match (DFA tr i acc bh) = go i where
+        go !s _ | IntSet.member s bh = IntSet.member s acc
+        go !s []                 = IntSet.member s acc
+        go !s (c : cs)           = case IntMap.lookup s tr of
             Nothing -> False
             Just sf -> go (sf SF.! c) cs
+
+    match8 (DFA tr i acc bh) = go i where
+        go !s !_ | IntSet.member s bh = IntSet.member s acc
+        go !s bs = case BS.uncons bs of
+            Nothing      -> IntSet.member s acc
+            Just (c, cs) -> case IntMap.lookup s tr of
+                Nothing -> False
+                Just sf -> go (sf SF.! c) cs
 
 -- | Complement DFA.
 --
@@ -398,8 +415,120 @@ instance Ord c => Match c (DFA c) where
 -- [False,False,False,True,True,True]
 --
 instance Complement c (DFA c) where
-    complement (DFA tr acc err) = DFA tr acc' err where
-        acc' = IS.difference (IM.keysSet tr) acc
+    complement (DFA tr ini acc bh) = DFA tr ini acc' bh where
+        acc' = IntSet.difference (IntMap.keysSet tr) acc
+
+instance Ord c => Derivate c (DFA c) where
+    nullable (DFA _tr ini acc _bh) = IntSet.member ini acc
+
+    derivate c (DFA tr ini acc bh) = DFA tr ini' acc bh where
+        ini' = case IntMap.lookup ini tr of
+            Nothing -> ini -- in error case let's just stay in the same state.
+            Just sf -> sf SF.! c
+
+-------------------------------------------------------------------------------
+-- toDot
+-------------------------------------------------------------------------------
+
+-- | Get Graphviz dot-code of DFA.
+--
+-- >>> let dfa = fromRE $ RE.star "abc"
+-- >>> putStr $ toDot dfa
+-- digraph dfa {
+-- rankdir=LR;
+-- // states
+-- "0" [shape=doublecircle];
+-- "1" [shape=circle];
+-- "2" [shape=circle];
+-- // initial state
+-- "" [shape=none];
+-- "" -> "0";
+-- // transitions
+-- "0" -> "2"[label="a"]
+-- "1" -> "0"[label="c"]
+-- "2" -> "1"[label="b"]
+-- }
+--
+toDot :: DFA Char -> String
+toDot = toDot' show pure
+
+-- | More flexible version of 'toDot'.
+toDot' :: (Ord c, Enum c, Bounded c) => (Int -> String) -> (c -> String) -> DFA c -> String
+toDot' showS showC (DFA tr ini acc bh)
+    = showString "digraph dfa {\n"
+    . showString "rankdir=LR;\n"
+    . showString "// states\n"
+    . showStates
+    . showString "// initial state\n"
+    . showInitial
+    . showString "// transitions\n"
+    . showTransitions
+    . showString "}\n"
+    $ ""
+  where
+    showStates  = foldr (.) id
+        [ showState i
+        | i <- IntMap.keys tr
+        , IntSet.member i acc || IntSet.notMember i bh
+        ]
+    showState s = showS' s . shape where
+        shape
+            | IntSet.member s acc = showString " [shape=doublecircle];\n"
+            | otherwise        = showString " [shape=circle];\n"
+
+    showInitial
+        = showString "\"\" [shape=none];\n"
+        . showString "\"\" -> "
+        . showS' ini
+        . showString ";\n"
+
+    showTransitions = foldr (.) id
+        [ showS' i
+        . showString " -> "
+        . showS' j
+        . showString "[label="
+        . label
+                . showString "]\n"
+        | (i, sf) <- IntMap.toList tr
+        , (lo, hi, j) <- toPieces sf
+        , IntSet.member j acc || IntSet.notMember j bh
+        , let label
+                | lo == hi
+                    = shows (showC lo)
+                | lo == minBound && hi == maxBound
+                    = shows ("-any" :: String)
+                | otherwise
+                    = shows (showC lo ++ "-" ++ showC hi)
+        ]
+
+    showS' = shows . showS
+
+-------------------------------------------------------------------------------
+-- Orphans
+-------------------------------------------------------------------------------
+
+-- | __WARNING__: The '/\' is inefficient, it actually computes the conjunction:
+--
+-- >>> putPretty $ asREChar $ "a" /\ "b"
+-- ^[]$
+--
+-- >>> putPretty $ asREChar $ "a" /\ star "a"
+-- ^a$
+--
+-- >>> putPretty $ asREChar $ star "aa" /\ star "aaa"
+-- ^(a(aaaaaa)*aaaaa)?$
+--
+instance (Ord c, Enum c, Bounded c) => MeetSemiLattice (RE.RE c) where
+    r /\ r' = toRE $ fromERE $ ERE.fromRE r /\ ERE.fromRE r'
+
+instance (Ord c, Enum c, Bounded c) => BoundedMeetSemiLattice (RE.RE c) where
+    top = RE.REStar (RE.REChars RSet.full)
+
+instance (Ord c, Enum c, Bounded c) => Lattice (RE.RE c)
+instance (Ord c, Enum c, Bounded c) => BoundedLattice (RE.RE c)
+
+instance (Ord c, Enum c, Bounded c) => Complement c (RE.RE c) where
+    complement = toRE . complement . fromRE
 
 -------------------------------------------------------------------------------
 -- Debug
@@ -408,9 +537,9 @@ instance Complement c (DFA c) where
 instance Show c => Pretty (DFA c) where
     pretty dfa = intercalate "\n"
         [ show i ++ acc ++ " -> " ++ SF.showSF sf ++ bh
-        | (i, sf) <- IM.toList (dfaTransition dfa)
-        , let acc = if IS.member i (dfaAcceptable dfa) then "+" else ""
-        , let bh = if IS.member i $ dfaBlackholes dfa then " -- black hole" else ""
+        | (i, sf) <- IntMap.toList (dfaTransition dfa)
+        , let acc = if IntSet.member i (dfaAcceptable dfa) then "+" else ""
+        , let bh = if IntSet.member i $ dfaBlackholes dfa then " -- black hole" else ""
         ]
 
 -- $setup
@@ -424,3 +553,5 @@ instance Show c => Pretty (DFA c) where
 -- >>> newtype Smaller a = Smaller a deriving (Show)
 -- >>> let intLog2 = (`div` 10)
 -- >>> instance QC.Arbitrary a => QC.Arbitrary (Smaller a) where arbitrary = QC.scale intLog2 QC.arbitrary; shrink (Smaller a) = map Smaller (QC.shrink a)
+--
+-- >>> let asREChar :: RE.RE Char -> RE.RE Char; asREChar = id

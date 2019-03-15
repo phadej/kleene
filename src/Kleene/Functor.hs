@@ -28,7 +28,6 @@ module Kleene.Functor (
 import Prelude ()
 import Prelude.Compat
 
-import Algebra.Lattice     ((\/))
 import Control.Applicative (Alternative (..), liftA2)
 import Data.Foldable       (toList)
 import Data.RangeSet.Map   (RSet)
@@ -201,8 +200,8 @@ toRE = toKleene
 -- | Convert to any 'Kleene'
 toKleene :: C.FiniteKleene c k => K c a -> k
 toKleene (KMap _ a)      = toKleene a
-toKleene (KUnion a b)    = toKleene a \/ toKleene b
-toKleene (KAppend _ a b) = toKleene a <> toKleene b
+toKleene (KUnion a b)    = C.unions [toKleene a, toKleene b]
+toKleene (KAppend _ a b) = C.appends [toKleene a, toKleene b]
 toKleene (KStar _ a)     = C.star (toKleene a)
 toKleene (KString s)     = C.appends (map C.char s)
 toKleene KEmpty          = C.empty

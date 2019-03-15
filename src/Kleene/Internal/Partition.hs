@@ -3,14 +3,15 @@ module Kleene.Internal.Partition where
 
 import Prelude ()
 import Prelude.Compat
+import Data.Semigroup (Semigroup (..))
 
-import Data.Foldable             (toList)
-import Data.List.NonEmpty.Compat (NonEmpty (..))
-import Data.RangeSet.Map         (RSet)
-import Data.Set                  (Set)
+import Data.Foldable      (toList)
+import Data.List.NonEmpty (NonEmpty (..))
+import Data.RangeSet.Map  (RSet)
+import Data.Set           (Set)
 
 import qualified Data.Function.Step.Discrete.Closed as SF
-import qualified Data.List.NonEmpty.Compat          as NE
+import qualified Data.List.NonEmpty          as NE
 import qualified Data.RangeSet.Map                  as RSet
 import qualified Data.Set                           as Set
 
@@ -125,7 +126,7 @@ examples (Partition xs) = Set.insert maxBound xs
 
 -- |
 --
--- prop> all (curry (<=)) $ intervals $ asPartitionChar p
+-- prop> all (uncurry (<=)) $ intervals $ asPartitionChar p
 intervals :: (Enum a, Bounded a, Ord a) => Partition a -> NonEmpty (a, a)
 intervals (Partition xs) = go minBound (toList xs) where
     go x []       = (x, maxBound) :| []
