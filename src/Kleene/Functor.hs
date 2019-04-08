@@ -30,12 +30,14 @@ import Prelude.Compat
 
 import Control.Applicative (Alternative (..), liftA2)
 import Data.Foldable       (toList)
+import Data.Functor.Apply  (Apply (..))
 import Data.RangeSet.Map   (RSet)
 import Data.String         (IsString (..))
 
 import qualified Data.RangeSet.Map      as RSet
 import qualified Text.Regex.Applicative as R
 
+import qualified Data.Functor.Alt       as Alt
 import qualified Kleene.Classes         as C
 import           Kleene.Internal.Pretty
 import           Kleene.Internal.Sets
@@ -70,29 +72,31 @@ instance Functor (K c) where
     fmap f (KAppend g a b) = KAppend (\x y -> f (g x y)) a b
     fmap f k                    = KMap f k
 
+instance Apply (K c) where
+    KEmpty <.> _ = KEmpty
+    _ <.> KEmpty = KEmpty
+
+    KPure f <.> k = fmap f k
+    k <.> KPure x = fmap ($ x) k
+
+    f <.> x = KAppend ($) f x
+
+    liftF2 = KAppend
+
 instance Applicative (K c) where
-    pure = KPure
-
-    KEmpty <*> _ = KEmpty
-    _ <*> KEmpty = KEmpty
-
-    KPure f <*> k = fmap f k
-    k <*> KPure x = fmap ($ x) k
-
-    f <*> x = KAppend ($) f x
+    pure  = KPure
+    (<*>) = (<.>)
 
 #if MIN_VERSION_base(4,10,0)
-    liftA2 = KAppend
+    liftA2 = liftF2
 #endif
 
-instance Alternative (K c) where
-    empty = KEmpty
+instance Alt.Alt (K c) where
+    KEmpty <!> k = k
+    k <!> KEmpty = k
+    KChar a <!> KChar b = KChar (RSet.union a b)
 
-    KEmpty <|> k = k
-    k <|> KEmpty = k
-    KChar a <|> KChar b = KChar (RSet.union a b)
-
-    a <|> b = KUnion a b
+    a <!> b = KUnion a b
 
     many KEmpty      = KPure []
     many (KStar _ k) = KMap pure (KStar Greedy k)
@@ -101,6 +105,12 @@ instance Alternative (K c) where
     some KEmpty      = KEmpty
     some (KStar _ k) = KMap pure (KStar Greedy k)
     some k           = liftA2 (:) k (KStar Greedy k)
+
+instance Alternative (K c) where
+    empty = KEmpty
+    (<|>) = (Alt.<!>)
+    some  = Alt.some
+    many  = Alt.many
 
 -- | 'few', not 'many'.
 --
