@@ -43,7 +43,8 @@ library
 
   -- Other dependencies
   build-depends:
-      base-compat        >=0.10.5 && <0.11
+      attoparsec
+    , base-compat        >=0.10.5 && <0.11
     , lattices           >=1.7.1  && <1.8
     , MemoTrie           >=0.6.9  && <0.7
     , QuickCheck         >=2.11.3 && <2.13
@@ -73,6 +74,7 @@ library
     Kleene.ERE
     Kleene.Equiv
     Kleene.Functor
+    Kleene.Functor.NonEmpty
     Kleene.Monad
     Kleene.RE
 
@@ -82,7 +84,10 @@ library
     Kleene.Internal.Pretty
     Kleene.Internal.Sets
 
-  other-modules:    Kleene.Internal.RE
+  other-modules:
+    Kleene.Internal.Functor
+    Kleene.Internal.RE
+
   ghc-options:      -Wall
   hs-source-dirs:   src
   default-language: Haskell2010

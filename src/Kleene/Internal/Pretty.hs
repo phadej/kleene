@@ -84,3 +84,13 @@ instance Pretty () where
 instance Pretty a => Pretty (Maybe a) where
     prettyS Nothing  = showString "Nothing"
     prettyS (Just x) = prettyS x
+
+instance (Pretty a, Pretty b) => Pretty (Either a b) where
+    prettyS (Left x)  = showString "Left " . prettyS x
+    prettyS (Right x) = showString "Right " . prettyS x
+
+instance (Pretty a, Pretty b) => Pretty (a, b) where
+    prettyS (x, y) = prettyS x . showString " , " . prettyS y
+
+instance Show a => Pretty [a] where
+    prettyS = showList
