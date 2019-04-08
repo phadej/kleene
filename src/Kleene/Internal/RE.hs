@@ -34,6 +34,7 @@ module Kleene.Internal.RE (
     generate,
     -- * Other
     isEmpty,
+    nullableProof,
     ) where
 
 import Prelude ()
@@ -316,6 +317,54 @@ instance (Ord c, Enum c, Bounded c) => C.Match c (RE c) where
     match r = nullable . foldl' (flip derivate) r
 
 -------------------------------------------------------------------------------
+-- Nullable with proof
+-------------------------------------------------------------------------------
+
+-- | Not only we can decide whether 'RE' is nullable, we can also
+-- remove the empty string:
+--
+-- >>> putPretty $ nullableProof eps
+-- ^[]$
+--
+-- >>> putPretty $ nullableProof $ star "x"
+-- ^xx*$
+--
+-- >>> putPretty $ nullableProof "foo"
+-- Nothing
+--
+-- 'nullableProof' is consistent with 'nullable':
+--
+-- prop> isJust (nullableProof r) === nullable (asREChar r)
+--
+-- The returned regular expression is not nullable:
+--
+-- prop> maybe True (not . nullable) $ nullableProof $ asREChar r
+--
+-- If we union with empty regex, we get a equivalent regular expression
+-- we started with:
+--
+-- prop> maybe r (eps \/) (nullableProof r) `equivalent` (asREChar r)
+--
+nullableProof :: forall c. (Ord c, Enum c, Bounded c) => RE c -> Maybe (RE c)
+nullableProof (REChars _)   = Nothing
+
+nullableProof (REAppend []) = Just empty
+nullableProof (REAppend xs)
+    | Just ys <- traverse (\x -> (,) x <$> nullableProof x) xs = Just (go ys)
+    | otherwise = Nothing
+  where
+    go :: [(RE c, RE c)] -> RE c
+    go rs = unions $ map appends $ tail $ traverse (\(r,r') -> [r,r']) rs
+
+nullableProof (REUnion cs rs)
+    | any nullable rs = Just $ REUnion cs $ Set.map (\r -> maybe r id $ nullableProof r) rs
+    | otherwise       = Nothing
+
+nullableProof (REStar r)
+    | Just r' <- nullableProof r = Just (r' <> REStar r')
+    | otherwise                  = Just (r <> REStar r) 
+
+-------------------------------------------------------------------------------
 -- isEmpty
 -------------------------------------------------------------------------------
 
@@ -544,6 +593,11 @@ instance (Ord c, Enum c, Bounded c, QC.Arbitrary c) => QC.Arbitrary (RE c) where
           where
             n2 = n `div` 2
 
+    shrink (REUnion _cs rs) = Set.toList rs
+    shrink (REAppend rs)    = rs ++ map appends (QC.shrink rs)
+    shrink (REStar r)       = r : map star (QC.shrink r)
+    shrink _                = []
+
 instance (QC.CoArbitrary c) => QC.CoArbitrary (RE c) where
     coarbitrary (REChars cs)    = QC.variant (0 :: Int) . QC.coarbitrary (RSet.toRangeList cs)
     coarbitrary (REAppend rs)   = QC.variant (1 :: Int) . QC.coarbitrary rs
@@ -608,6 +662,7 @@ instance C.ToLatin1 RE where
 -- >>> import Control.Monad (void)
 -- >>> import Data.Foldable (traverse_)
 -- >>> import Data.List (sort)
+-- >>> import Data.Maybe (isJust)
 --
 -- >>> import Test.QuickCheck ((===))
 -- >>> import qualified Test.QuickCheck as QC

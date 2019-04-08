@@ -6,4 +6,6 @@
 * Add `Derivate c (DFA c)` instance.
 * Add `toDot` to output `DFA` to be rendered by *graphviz*.
 * Add `fromRE :: RE c -> ERE c`
+* Add `nullableProof :: RE c -> Maybe (RE c)` which returns non-nullable part
+  of given regular expression.
 

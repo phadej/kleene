@@ -28,6 +28,7 @@ module Kleene.RE (
     generate,
     -- * Other
     isEmpty,
+    nullableProof,
     ) where
 
 -- This to include orphans.

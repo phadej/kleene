@@ -80,3 +80,7 @@ instance Pretty Bool where
 
 instance Pretty () where
     prettyS _ = showChar '.'
+
+instance Pretty a => Pretty (Maybe a) where
+    prettyS Nothing  = showString "Nothing"
+    prettyS (Just x) = prettyS x
