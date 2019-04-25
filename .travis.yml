@@ -91,6 +91,7 @@ install:
     echo "world-file:        $CABALHOME/world"          >> $CABALHOME/config
     echo "extra-prog-path:   $CABALHOME/bin"            >> $CABALHOME/config
     echo "symlink-bindir:    $CABALHOME/bin"            >> $CABALHOME/config
+    echo "installdir:        $CABALHOME/bin"            >> $CABALHOME/config
     echo "build-summary:     $CABALHOME/logs/build.log" >> $CABALHOME/config
     echo "store-dir:         $CABALHOME/store"          >> $CABALHOME/config
     echo "install-dirs user"                            >> $CABALHOME/config
