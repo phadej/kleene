@@ -41,7 +41,6 @@ import Prelude ()
 import Prelude.Compat
 import Data.Semigroup (Semigroup (..))
 
-import Algebra.Lattice     (BoundedJoinSemiLattice (..), JoinSemiLattice (..))
 import Control.Applicative (liftA2)
 import Data.Foldable       (toList)
 import Data.List           (foldl')
@@ -252,6 +251,13 @@ instance (Ord c, Enum c, Bounded c) => C.FiniteKleene c (RE c) where
     charRange  = charRange
     fromRSet   = REChars
     anyChar    = anyChar
+
+-------------------------------------------------------------------------------
+-- Pseudo lattice
+-------------------------------------------------------------------------------
+
+(\/) :: (Ord c, Enum c, Bounded c) => RE c -> RE c -> RE c
+r \/ r' = unions [r, r']
 
 -------------------------------------------------------------------------------
 -- derivative
@@ -566,11 +572,7 @@ instance Eq c => Monoid (RE c) where
     mappend = (<>)
     mconcat = appends
 
-instance (Ord c, Enum c, Bounded c) => JoinSemiLattice (RE c) where
-    r \/ r' = unions [r, r']
 
-instance (Ord c, Enum c, Bounded c) => BoundedJoinSemiLattice (RE c) where
-    bottom = empty
 
 instance c ~ Char => IsString (RE c) where
     fromString = string
@@ -668,4 +670,7 @@ instance C.ToLatin1 RE where
 -- >>> import qualified Test.QuickCheck as QC
 --
 -- >>> import Kleene.Classes (match)
+-- >>> import Algebra.Lattice (bottom)
+-- >>> import Kleene.RE ()
+--
 -- >>> let asREChar :: RE Char -> RE Char; asREChar = id

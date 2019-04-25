@@ -23,8 +23,7 @@ import Prelude ()
 import Prelude.Compat
 
 import Algebra.Lattice
-       (BoundedLattice, BoundedMeetSemiLattice (..), Lattice,
-       MeetSemiLattice (..))
+       (BoundedJoinSemiLattice (..), BoundedMeetSemiLattice (..), Lattice (..))
 import Data.IntMap       (IntMap)
 import Data.IntSet       (IntSet)
 import Data.List         (intercalate)
@@ -518,14 +517,15 @@ toDot' showS showC (DFA tr ini acc bh)
 -- >>> putPretty $ asREChar $ star "aa" /\ star "aaa"
 -- ^(a(aaaaaa)*aaaaa)?$
 --
-instance (Ord c, Enum c, Bounded c) => MeetSemiLattice (RE.RE c) where
+instance (Ord c, Enum c, Bounded c) => Lattice (RE.RE c) where
     r /\ r' = toRE $ fromERE $ ERE.fromRE r /\ ERE.fromRE r'
+    r \/ r' = unions [r, r']
+
+instance (Ord c, Enum c, Bounded c) => BoundedJoinSemiLattice (RE.RE c) where
+    bottom = empty
 
 instance (Ord c, Enum c, Bounded c) => BoundedMeetSemiLattice (RE.RE c) where
     top = RE.REStar (RE.REChars RSet.full)
-
-instance (Ord c, Enum c, Bounded c) => Lattice (RE.RE c)
-instance (Ord c, Enum c, Bounded c) => BoundedLattice (RE.RE c)
 
 instance (Ord c, Enum c, Bounded c) => Complement c (RE.RE c) where
     complement = toRE . complement . fromRE
