@@ -13,7 +13,8 @@ module Kleene.Monad (
     -- | Binary operators are
     --
     -- * '<>' for append
-    -- * '\/' for union
+    --
+    -- There are no binary operator for union. Use 'unions'.
     --
     empty,
     eps,
@@ -40,7 +41,6 @@ import Prelude ()
 import Prelude.Compat
 import Data.Semigroup (Semigroup (..))
 
-import Algebra.Lattice     (BoundedJoinSemiLattice (..), JoinSemiLattice (..))
 import Control.Applicative (liftA2)
 import Control.Monad       (ap)
 import Data.Foldable       (toList)
@@ -97,9 +97,6 @@ instance Monad M where
 -- | Empty regex. Doesn't accept anything.
 --
 -- >>> putPretty (empty :: M Bool)
--- ^[]$
---
--- >>> putPretty (bottom :: M Bool)
 -- ^[]$
 --
 -- prop> match (empty :: M Char) (s :: String) === False
@@ -248,7 +245,7 @@ nullable (MStar _)       = True
 -- >>> putPretty $ derivate 'f' "foobar"
 -- ^oobar$
 --
--- >>> putPretty $ derivate 'x' $ "xyz" \/ "abc"
+-- >>> putPretty $ derivate 'x' $ unions ["xyz", "abc"]
 -- ^yz$
 --
 -- >>> putPretty $ derivate 'x' $ star "xyz"
@@ -308,7 +305,7 @@ isEps _            = False
 -- "abc"
 -- "abc"
 --
--- >>> example $ star $ "a" \/ "b"
+-- >>> example $ star $ unions ["a", "b"]
 -- "ababbb"
 -- "baab"
 -- "abbababaa"
@@ -369,12 +366,6 @@ instance Monoid (M c) where
     mappend = (<>)
     mconcat = appends
 
-instance JoinSemiLattice (M c) where
-    r \/ r' = unions [r, r']
-
-instance BoundedJoinSemiLattice (M c) where
-    bottom = empty
-
 instance c ~ Char => IsString (M c) where
     fromString = string
 
@@ -390,7 +381,7 @@ instance (Eq c, Enum c, Bounded c, QC.Arbitrary c) => QC.Arbitrary (M c) where
             , pure eps
             , fmap char QC.arbitrary
             , liftA2 (<>) (arb n2) (arb n2)
-            , liftA2 (\/) (arb n2) (arb n2)
+            , liftA2 (\x y -> unions [x,y]) (arb n2) (arb n2)
             , fmap star (arb n2)
             ]
           where

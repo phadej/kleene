@@ -8,4 +8,4 @@
 * Add `fromRE :: RE c -> ERE c`
 * Add `nullableProof :: RE c -> Maybe (RE c)` which returns non-nullable part
   of given regular expression.
-
+* Support/require `lattices-2`: `RE` is now a `Lattice`, `M` isn't.

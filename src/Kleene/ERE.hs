@@ -45,9 +45,7 @@ import Prelude ()
 import Prelude.Compat
 
 import Algebra.Lattice
-       (BoundedJoinSemiLattice (..), BoundedLattice,
-       BoundedMeetSemiLattice (..), JoinSemiLattice (..), Lattice,
-       MeetSemiLattice (..))
+       (BoundedJoinSemiLattice (..), BoundedMeetSemiLattice (..), Lattice (..))
 import Control.Applicative (liftA2)
 import Data.Foldable       (toList)
 import Data.List           (foldl')
@@ -526,20 +524,15 @@ instance Eq c => Monoid (ERE c) where
     mappend = (<>)
     mconcat = appends
 
-instance (Ord c, Enum c) => JoinSemiLattice (ERE c) where
+instance (Ord c, Enum c) => Lattice (ERE c) where
     r \/ r' = unions [r, r']
+    r /\ r' = intersections [r, r']
 
 instance (Ord c, Enum c) => BoundedJoinSemiLattice (ERE c) where
     bottom = empty
 
-instance (Ord c, Enum c) => MeetSemiLattice (ERE c) where
-    r /\ r' = intersections [r, r']
-
 instance (Ord c, Enum c) => BoundedMeetSemiLattice (ERE c) where
     top = everything
-
-instance  (Ord c, Enum c) => Lattice (ERE c)
-instance  (Ord c, Enum c) => BoundedLattice (ERE c)
 
 instance c ~ Char => IsString (ERE c) where
     fromString = string

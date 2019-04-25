@@ -10,13 +10,12 @@ module Kleene.Equiv where
 import Prelude ()
 import Prelude.Compat
 
-import Algebra.Lattice
-       (BoundedJoinSemiLattice (..), JoinSemiLattice (..), joinLeq)
+import Algebra.Lattice    (BoundedJoinSemiLattice (..), BoundedMeetSemiLattice (..), Lattice (..), joinLeq)
 import Algebra.PartialOrd (PartialOrd (..))
-import Data.Semigroup (Semigroup (..))
+import Data.Semigroup     (Semigroup (..))
 
 import Kleene.Classes
-import           Kleene.Internal.Pretty
+import Kleene.Internal.Pretty
 
 -- | Regular-expressions for which '==' is 'equivalent'.
 --
@@ -42,13 +41,13 @@ import           Kleene.Internal.Pretty
 -- (False,False)
 --
 newtype Equiv r c = Equiv (r c)
-  deriving (Show, Semigroup, Monoid, BoundedJoinSemiLattice, JoinSemiLattice, Pretty)
+  deriving (Show, Semigroup, Monoid, BoundedJoinSemiLattice, BoundedMeetSemiLattice, Lattice, Pretty)
 
 instance Equivalent c (r c) => Eq (Equiv r c) where
     (==) = equivalent
 
 -- | \(a \preceq b := a \lor b = b \)
-instance (JoinSemiLattice (r c), Equivalent c (r c)) => PartialOrd (Equiv r c) where
+instance (Lattice (r c), Equivalent c (r c)) => PartialOrd (Equiv r c) where
     leq = joinLeq
 
 deriving instance Kleene       (r c) => Kleene       (Equiv r c)

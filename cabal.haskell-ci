@@ -1,0 +1,4 @@
+branches: master
+
+doctest: True
+doctest-filter-packages: base-compat
