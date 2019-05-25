@@ -17,13 +17,13 @@ import qualified Data.Set                           as Set
 
 import Test.QuickCheck
 
--- | 'Partition' devides type into disjoint connected partitions.
+-- | 'Partition' divides type into disjoint connected partitions.
 --
 -- /Note:/ we could have non-connecter partitions too,
 -- but that would be more complicated.
 -- This variant is correct by construction, but less precise.
 --
--- It's enought to store last element of each piece.
+-- It's enough to store last element of each piece.
 --
 -- @'Partition' (fromList [x1, x2, x3]) :: 'Partition' s@ describes a partition of /Set/ @s@, as
 --

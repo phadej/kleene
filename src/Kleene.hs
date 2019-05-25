@@ -102,7 +102,7 @@
 -- >>> equivalent re'' (star "aaaaaa")
 -- True
 --
--- Another feature of the library is an 'Applciative' 'Functor',
+-- Another feature of the library is an 'Applicative' 'Functor',
 --
 -- >>> import Control.Applicative
 -- >>> import qualified Kleene.Functor as F

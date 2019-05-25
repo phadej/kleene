@@ -453,7 +453,7 @@ leadingCharsAppend (r : rs)
 -- >>> let re1 = star "a" <> "a"
 -- >>> let re2 = "a" <> star "a"
 --
--- These are different regular expressions, even we perform
+-- These are different regular expressions, even if we perform
 -- some normalisation-on-construction:
 --
 -- >>> re1 == re2
