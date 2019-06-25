@@ -1,7 +1,7 @@
 cabal-version:      1.24
 name:               kleene
 version:            0.1
-x-revision:         1
+x-revision:         2
 synopsis:           Kleene algebra
 category:           Math
 description:
@@ -39,7 +39,7 @@ library
     , transformers  >=0.3.0.0  && <0.6
 
   if !impl(ghc >=8.0)
-    build-depends: semigroups >=0.18.5 && <0.19
+    build-depends: semigroups >=0.18.5 && <0.20
 
   -- Other dependencies
   build-depends:
