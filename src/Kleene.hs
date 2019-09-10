@@ -78,11 +78,11 @@
 -- >>> import Kleene.RE (generate)
 --
 -- >>> traverse_ print $ take 5 $ generate (curry QC.choose) 42 re
+-- "abcabcabcabcabcabcabcdefyz"
 -- "abcabcabcabcabcabcdefyz"
--- "abcabcabcabcdefyz"
--- "abcabcabcabcabcabcabcabcabcdefx"
--- "abcabcdefx"
--- "abcabcabcabcabcabcdefyz"
+-- "abcabcabcdefx"
+-- "abcabcabcdefyz"
+-- "abcabcabcdefx"
 --
 -- In addition to the "normal" regular expressions, there are /extended regular expressions/.
 -- Regular expressions which we can 'complement', and therefore intersect:
