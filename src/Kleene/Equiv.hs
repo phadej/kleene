@@ -10,7 +10,9 @@ module Kleene.Equiv where
 import Prelude ()
 import Prelude.Compat
 
-import Algebra.Lattice    (BoundedJoinSemiLattice (..), BoundedMeetSemiLattice (..), Lattice (..), joinLeq)
+import Algebra.Lattice
+       (BoundedJoinSemiLattice (..), BoundedMeetSemiLattice (..), Lattice (..),
+       joinLeq)
 import Algebra.PartialOrd (PartialOrd (..))
 import Data.Semigroup     (Semigroup (..))
 

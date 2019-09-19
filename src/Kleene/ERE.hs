@@ -1,9 +1,9 @@
-{-# LANGUAGE BangPatterns           #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE Safe                   #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Safe                  #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 module Kleene.ERE (
     ERE (..),
     -- * Construction

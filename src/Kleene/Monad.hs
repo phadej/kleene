@@ -37,9 +37,9 @@ module Kleene.Monad (
     isEps,
     ) where
 
+import Data.Semigroup (Semigroup (..))
 import Prelude ()
 import Prelude.Compat
-import Data.Semigroup (Semigroup (..))
 
 import Control.Applicative (liftA2)
 import Control.Monad       (ap)
@@ -55,7 +55,7 @@ import qualified Kleene.Classes         as C
 import           Kleene.Internal.Pretty
 
 -- | Regular expression which has no restrictions on the elements.
--- Therefore we can have 'Monad' instance, i.e. have a regexp where 
+-- Therefore we can have 'Monad' instance, i.e. have a regexp where
 -- characters are regexps themselves.
 --
 -- Because there are no optimisations, it's better to work over small alphabets.

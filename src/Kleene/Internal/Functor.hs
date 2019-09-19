@@ -34,9 +34,9 @@ import Data.Functor.Apply  (Apply (..))
 import Data.RangeSet.Map   (RSet)
 import Data.String         (IsString (..))
 
+import qualified Data.Functor.Alt       as Alt
 import qualified Data.RangeSet.Map      as RSet
 import qualified Text.Regex.Applicative as R
-import qualified Data.Functor.Alt       as Alt
 
 import qualified Kleene.Classes         as C
 import           Kleene.Internal.Pretty

@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe  #-}
+{-# LANGUAGE Safe #-}
 module Kleene.Functor (
     K,
     Greediness (..),

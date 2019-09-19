@@ -37,9 +37,9 @@ module Kleene.Internal.RE (
     nullableProof,
     ) where
 
+import Data.Semigroup (Semigroup (..))
 import Prelude ()
 import Prelude.Compat
-import Data.Semigroup (Semigroup (..))
 
 import Control.Applicative (liftA2)
 import Data.Foldable       (toList)
@@ -368,7 +368,7 @@ nullableProof (REUnion cs rs)
 
 nullableProof (REStar r)
     | Just r' <- nullableProof r = Just (r' <> REStar r')
-    | otherwise                  = Just (r <> REStar r) 
+    | otherwise                  = Just (r <> REStar r)
 
 -------------------------------------------------------------------------------
 -- isEmpty
