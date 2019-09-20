@@ -32,5 +32,5 @@ module Kleene.RE (
     ) where
 
 -- This to include orphans.
-import Kleene.Internal.RE
 import Kleene.DFA ()
+import Kleene.Internal.RE

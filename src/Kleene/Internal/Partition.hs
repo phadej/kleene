@@ -1,9 +1,9 @@
 {-# LANGUAGE Safe #-}
 module Kleene.Internal.Partition where
 
+import Data.Semigroup (Semigroup (..))
 import Prelude ()
 import Prelude.Compat
-import Data.Semigroup (Semigroup (..))
 
 import Data.Foldable      (toList)
 import Data.List.NonEmpty (NonEmpty (..))
@@ -11,7 +11,7 @@ import Data.RangeSet.Map  (RSet)
 import Data.Set           (Set)
 
 import qualified Data.Function.Step.Discrete.Closed as SF
-import qualified Data.List.NonEmpty          as NE
+import qualified Data.List.NonEmpty                 as NE
 import qualified Data.RangeSet.Map                  as RSet
 import qualified Data.Set                           as Set
 
