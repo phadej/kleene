@@ -1,4 +1,4 @@
 branches: master
 
-doctest: True
+doctest: <8.10
 doctest-filter-packages: base-compat
