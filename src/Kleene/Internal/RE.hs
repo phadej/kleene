@@ -527,9 +527,9 @@ instance (Ord c, Enum c, Bounded c) => C.Equivalent c (RE c) where
 -- "abc"
 --
 -- >>> example $ star $ "a" \/ "b"
--- "abbba"
--- "bbab"
--- "ba"
+-- ""
+-- "bbaabbaaba"
+-- "b"
 --
 -- >>> example empty
 --

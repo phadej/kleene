@@ -306,9 +306,9 @@ isEps _            = False
 -- "abc"
 --
 -- >>> example $ star $ unions ["a", "b"]
--- "aabba"
--- "baaa"
--- "ab"
+-- ""
+-- "abababaaba"
+-- "a"
 --
 -- xx >>> example empty
 --
