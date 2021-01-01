@@ -2,9 +2,7 @@ build :
 	cabal new-build
 
 doctest :
-	mv .ghc.environment.x86_64-linux-8.6.4 tmp
-	grep -v base-compat-0 tmp > .ghc.environment.x86_64-linux-8.6.4
-	rm tmp
+	perl -i -e 'while (<ARGV>) { print unless /package-id\s+(base-compat)-\d+(\.\d+)*/; }' .ghc.environment.*
 	doctest --fast src/
 
 haddock :
