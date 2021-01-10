@@ -1,4 +1,5 @@
 {-# LANGUAGE Safe #-}
+{-# OPTIONS_HADDOCK not-home #-}
 module Kleene.Internal.Partition where
 
 import Data.Semigroup (Semigroup (..))
@@ -16,6 +17,16 @@ import qualified Data.RangeSet.Map                  as RSet
 import qualified Data.Set                           as Set
 
 import Test.QuickCheck
+
+-- $setup
+-- >>> import Data.Word
+-- >>> import Data.Semigroup (Semigroup (..))
+-- >>> import Test.QuickCheck (Arbitrary (..), (===), (==>))
+-- >>> import Data.RangeSet.Map (RSet)
+-- >>> import qualified Data.RangeSet.Map as RSet
+--
+-- >>> let asPartitionChar :: Partition Char -> Partition Char; asPartitionChar = id
+-- >>> instance (Ord a, Enum a, Arbitrary a) => Arbitrary (RSet a) where arbitrary = fmap RSet.fromRangeList arbitrary
 
 -- | 'Partition' devides type into disjoint connected partitions.
 --
@@ -172,14 +183,3 @@ toSF f (Partition p) = SF.fromList
     (f maxBound)
   where
     as = toList p
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
--- >>> import Data.Word
--- >>> import Test.QuickCheck ((===))
---
--- >>> let asPartitionChar :: Partition Char -> Partition Char; asPartitionChar = id
--- >>> instance (Ord a, Enum a, Arbitrary a) => Arbitrary (RSet a) where arbitrary = fmap RSet.fromRangeList arbitrary

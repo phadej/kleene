@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE Safe  #-}
+{-# OPTIONS_HADDOCK not-home #-}
 module Kleene.Internal.Pretty (
     Pretty (..),
     putPretty,

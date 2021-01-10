@@ -44,6 +44,29 @@ import qualified Kleene.ERE             as ERE
 import           Kleene.Internal.Pretty
 import qualified Kleene.Internal.RE     as RE
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+-- >>> import Data.Foldable (traverse_)
+-- >>> import Data.Semigroup (Semigroup (..))
+-- >>> import Algebra.Lattice ((/\))
+-- >>> import Kleene.Classes
+-- >>> import Kleene.Internal.Pretty (putPretty)
+-- >>> import Test.QuickCheck ((===))
+-- >>> import qualified Test.QuickCheck as QC
+-- >>> import qualified Kleene.RE as RE
+-- >>> import qualified Kleene.ERE as ERE
+-- >>> import qualified Data.RangeSet.Map as RSet
+--
+-- >>> newtype Smaller a = Smaller a deriving (Show)
+-- >>> let intLog2 = (`div` 10)
+-- >>> instance QC.Arbitrary a => QC.Arbitrary (Smaller a) where arbitrary = QC.scale intLog2 QC.arbitrary; shrink (Smaller a) = map Smaller (QC.shrink a)
+--
+-- >>> let asREChar :: RE.RE Char -> RE.RE Char; asREChar = id
+
+-------------------------------------------------------------------------------
+-- DFA
+-------------------------------------------------------------------------------
+
 -- | Deterministic finite automaton.
 --
 -- A deterministic finite automaton (DFA) over an alphabet \(\Sigma\) (type
@@ -234,7 +257,7 @@ fromTMImpl mequiv re = DFA
 --
 -- For 'RE.string' regular expressions, @'toRE' . 'fromRE' = 'id'@:
 --
--- prop> let s = take 5 s' in RE.string (s :: String) === toRE (fromRE (RE.string s))
+-- prop> let s' = take 5 s in RE.string (s' :: String) === toRE (fromRE (RE.string s'))
 --
 -- But in general it isn't:
 --
@@ -541,17 +564,3 @@ instance Show c => Pretty (DFA c) where
         , let acc = if IntSet.member i (dfaAcceptable dfa) then "+" else ""
         , let bh = if IntSet.member i $ dfaBlackholes dfa then " -- black hole" else ""
         ]
-
--- $setup
--- >>> :set -XOverloadedStrings
--- >>> import Data.Foldable (traverse_)
--- >>> import Algebra.Lattice ((/\))
---
--- >>> import Test.QuickCheck ((===))
--- >>> import qualified Test.QuickCheck as QC
---
--- >>> newtype Smaller a = Smaller a deriving (Show)
--- >>> let intLog2 = (`div` 10)
--- >>> instance QC.Arbitrary a => QC.Arbitrary (Smaller a) where arbitrary = QC.scale intLog2 QC.arbitrary; shrink (Smaller a) = map Smaller (QC.shrink a)
---
--- >>> let asREChar :: RE.RE Char -> RE.RE Char; asREChar = id

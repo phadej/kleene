@@ -4,6 +4,7 @@
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE Safe                   #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# OPTIONS_HADDOCK not-home #-}
 module Kleene.Internal.RE (
     RE (..),
     -- * Construction
@@ -15,6 +16,7 @@ module Kleene.Internal.RE (
     --
     empty,
     eps,
+    everything,
     char,
     charRange,
     anyChar,
@@ -60,6 +62,30 @@ import qualified Test.QuickCheck.Random             as QC (mkQCGen)
 import qualified Kleene.Classes            as C
 import qualified Kleene.Internal.Partition as P
 import           Kleene.Internal.Pretty
+
+-- $setup
+-- >>> :set -XOverloadedStrings
+-- >>> import Control.Monad (void)
+-- >>> import Data.Foldable (traverse_)
+-- >>> import Data.List (sort)
+-- >>> import Data.Maybe (isJust)
+-- >>> import Data.Semigroup (Semigroup (..))
+--
+-- >>> import Test.QuickCheck ((===))
+-- >>> import qualified Test.QuickCheck as QC
+-- >>> import qualified Data.Map as Map
+-- >>> import qualified Data.Function.Step.Discrete.Closed as SF
+--
+-- >>> import Kleene.Classes (match)
+-- >>> import Kleene.Internal.Pretty (putPretty, pretty)
+-- >>> import Algebra.Lattice (bottom, (\/))
+-- >>> import Kleene.RE ()
+--
+-- >>> let asREChar :: RE Char -> RE Char; asREChar = id
+
+-------------------------------------------------------------------------------
+-- RE
+-------------------------------------------------------------------------------
 
 -- | Regular expression
 --
@@ -654,23 +680,3 @@ instance C.ToLatin1 RE where
     toLatin1 (REAppend xs)   = appends (map C.toLatin1 xs)
     toLatin1 (REUnion rs xs) = C.fromRSet (C.toLatin1 rs) \/ unions (map C.toLatin1 (Set.toList  xs))
     toLatin1 (REStar r)      = star (C.toLatin1 r)
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
--- >>> :set -XOverloadedStrings
--- >>> import Control.Monad (void)
--- >>> import Data.Foldable (traverse_)
--- >>> import Data.List (sort)
--- >>> import Data.Maybe (isJust)
---
--- >>> import Test.QuickCheck ((===))
--- >>> import qualified Test.QuickCheck as QC
---
--- >>> import Kleene.Classes (match)
--- >>> import Algebra.Lattice (bottom)
--- >>> import Kleene.RE ()
---
--- >>> let asREChar :: RE Char -> RE Char; asREChar = id

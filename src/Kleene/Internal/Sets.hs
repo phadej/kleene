@@ -1,8 +1,9 @@
 {-# LANGUAGE Safe #-}
+{-# OPTIONS_HADDOCK not-home #-}
 -- | Character sets.
 module Kleene.Internal.Sets (
     dotRSet,
-    ) where
+) where
 
 import Data.RangeSet.Map (RSet)
 

@@ -164,6 +164,7 @@ module Kleene (
     FiniteKleene (..),
     Derivate (..),
     Match (..),
+    Equivalent (..),
     TransitionMap (..),
     Complement (..),
     ToLatin1 (..),
