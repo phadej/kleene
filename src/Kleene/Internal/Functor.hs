@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP   #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE Safe  #-}
+{-# OPTIONS_HADDOCK not-home #-}
 module Kleene.Internal.Functor (
     K (..),
     Greediness (..),
@@ -43,6 +44,20 @@ import           Kleene.Internal.Pretty
 import           Kleene.Internal.Sets
 import qualified Kleene.RE              as RE
 
+
+-- $setup
+--
+-- >>> import Control.Applicative (Alternative (..), liftA2)
+-- >>> import Data.Semigroup (Semigroup (..))
+-- >>> import Kleene.Internal.Pretty (putPretty)
+-- >>> import qualified Kleene.Classes as C
+-- >>> import qualified Kleene.RE as RE
+-- >>> import qualified Text.Regex.Applicative as R
+
+-------------------------------------------------------------------------------
+-- Functor RE
+-------------------------------------------------------------------------------
+
 -- | Star behaviour
 data Greediness
     = Greedy    -- ^ 'many'
@@ -70,7 +85,7 @@ instance Functor (K c) where
     fmap f (KPure x)       = KPure (f x)
     fmap f (KMap g k)      = KMap (f . g) k
     fmap f (KAppend g a b) = KAppend (\x y -> f (g x y)) a b
-    fmap f k                    = KMap f k
+    fmap f k               = KMap f k
 
 instance Apply (K c) where
     KEmpty <.> _ = KEmpty
@@ -272,11 +287,3 @@ toRA (KString s)         = R.string s
 --
 instance c ~ Char => Pretty (K c a) where
     pretty = pretty . toRE
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
---
--- >>> :set -XOverloadedStrings

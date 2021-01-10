@@ -9,6 +9,7 @@ module Kleene.RE (
     --
     empty,
     eps,
+    everything,
     char,
     charRange,
     anyChar,

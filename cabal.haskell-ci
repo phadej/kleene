@@ -1,4 +1,2 @@
 branches: master
-
-doctest: <8.10
-doctest-filter-packages: base-compat
+docspec:  >=7.10

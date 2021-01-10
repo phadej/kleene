@@ -1,3 +1,9 @@
+## 0.1.1
+
+* Export `Kleene.Functor.NonEmpty.few1`
+* Export `Kleene.RE.everything` and `Kleene.ERE.everything`
+* Export `Equivalent` from `Kleene`
+
 ## 0.1
 
 * Drop superclasses from `Kleene`.

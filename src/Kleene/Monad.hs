@@ -54,6 +54,19 @@ import qualified Test.QuickCheck.Random as QC (mkQCGen)
 import qualified Kleene.Classes         as C
 import           Kleene.Internal.Pretty
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+-- >>> import Data.Foldable (traverse_)
+-- >>> import Data.List (sort)
+-- >>> import Kleene.Internal.Pretty (putPretty)
+--
+-- >>> import Test.QuickCheck ((===))
+-- >>> import qualified Test.QuickCheck as QC
+--
+-- >>> import Kleene.RE (RE)
+-- >>> import Kleene.Classes (match)
+-- >>> let asMBool :: M Bool -> M Bool; asMBool = id
+
 -- | Regular expression which has no restrictions on the elements.
 -- Therefore we can have 'Monad' instance, i.e. have a regexp where
 -- characters are regexps themselves.
@@ -435,19 +448,3 @@ instance (Pretty c, Eq c) => Pretty (M c) where
         prettySList :: [c] -> ShowS
         prettySList [c] = prettyS c
         prettySList xs  = showChar '[' . foldr (\a b -> prettyS a . b) (showChar ']') xs
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
--- >>> :set -XOverloadedStrings
--- >>> import Data.Foldable (traverse_)
--- >>> import Data.List (sort)
---
--- >>> import Test.QuickCheck ((===))
--- >>> import qualified Test.QuickCheck as QC
---
--- >>> import Kleene.RE (RE)
--- >>> import Kleene.Classes (match)
--- >>> let asMBool :: M Bool -> M Bool; asMBool = id

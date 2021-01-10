@@ -16,6 +16,7 @@ module Kleene.ERE (
     --
     empty,
     eps,
+    everything,
     char,
     charRange,
     anyChar,
@@ -64,6 +65,21 @@ import qualified Kleene.Classes            as C
 import qualified Kleene.Internal.Partition as P
 import           Kleene.Internal.Pretty
 import qualified Kleene.Internal.RE        as RE
+
+-- $setup
+-- >>> import Algebra.Lattice ((/\), (\/), top, bottom)
+-- >>> import Data.Semigroup (Semigroup (..))
+-- >>> import Control.Monad (void)
+-- >>> import Data.Foldable (traverse_)
+-- >>> import Data.List (sort)
+-- >>> import Test.QuickCheck ((===))
+-- >>> import qualified Test.QuickCheck as QC
+-- >>> import qualified Data.Map as Map
+-- >>> import qualified Data.Function.Step.Discrete.Closed as SF
+--
+-- >>> import Kleene.Classes (match)
+-- >>> import Kleene.Internal.Pretty (putPretty, pretty)
+-- >>> let asEREChar :: ERE Char -> ERE Char; asEREChar = id
 
 -- | Extended regular expression
 --
@@ -614,19 +630,3 @@ instance C.ToLatin1 ERE where
     toLatin1 (EREUnion rs xs) = C.fromRSet (C.toLatin1 rs) \/ unions (map C.toLatin1 (Set.toList  xs))
     toLatin1 (EREStar r)      = star (C.toLatin1 r)
     toLatin1 (ERENot r)       = complement (C.toLatin1 r)
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
--- >>> :set -XOverloadedStrings
--- >>> import Control.Monad (void)
--- >>> import Data.Foldable (traverse_)
--- >>> import Data.List (sort)
---
--- >>> import Test.QuickCheck ((===))
--- >>> import qualified Test.QuickCheck as QC
---
--- >>> import Kleene.Classes (match)
--- >>> let asEREChar :: ERE Char -> ERE Char; asEREChar = id

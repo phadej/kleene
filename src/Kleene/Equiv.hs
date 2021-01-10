@@ -19,6 +19,12 @@ import Data.Semigroup     (Semigroup (..))
 import Kleene.Classes
 import Kleene.Internal.Pretty
 
+-- $setup
+-- >>> import Kleene.RE (RE)
+-- >>> import Kleene.Classes
+-- >>> import Algebra.PartialOrd (leq)
+-- >>> import Data.Semigroup (Semigroup (..))
+
 -- | Regular-expressions for which '==' is 'equivalent'.
 --
 -- >>> let re1 = star "a" <> "a" :: RE Char
@@ -58,6 +64,3 @@ deriving instance Derivate   c (r c) => Derivate   c (Equiv r c)
 deriving instance Match      c (r c) => Match      c (Equiv r c)
 deriving instance Equivalent c (r c) => Equivalent c (Equiv r c)
 deriving instance Complement c (r c) => Complement c (Equiv r c)
-
--- $setup
--- >>> import Kleene.RE (RE)

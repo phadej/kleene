@@ -6,6 +6,7 @@ module Kleene.Functor.NonEmpty (
     Greediness (..),
     -- * Constructors
     some1,
+    few1,
     anyChar,
     oneof,
     char,
@@ -45,6 +46,18 @@ import           Kleene.Internal.Functor (Greediness (..), K (..))
 import           Kleene.Internal.Pretty
 import           Kleene.Internal.Sets
 import qualified Kleene.RE               as RE
+
+-- $setup
+--
+-- >>> import Control.Applicative (optional, Alternative (..))
+-- >>> import Data.Functor.Apply (Apply (..))
+-- >>> import Data.List.NonEmpty (NonEmpty (..))
+-- >>> import Kleene.Functor (Greediness (..), K (..))
+-- >>> import Data.Foldable (toList)
+-- >>> import Kleene.Internal.Pretty (putPretty)
+-- >>> import qualified Kleene.RE as RE
+-- >>> import qualified Kleene.Classes as C
+-- >>> import qualified Text.Regex.Applicative as R
 
 -- | 'Applicative' 'Functor' regular expression.
 data K1 c a where
@@ -276,12 +289,3 @@ nullableProof (KString (c : cs)) = Left (NE.toList <$> K1String (c :| cs))
 --
 instance c ~ Char => Pretty (K1 c a) where
     pretty = pretty . toRE
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
---
--- >>> :set -XOverloadedStrings
--- >>> import Control.Applicative (optional)
