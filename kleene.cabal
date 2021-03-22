@@ -1,6 +1,6 @@
 cabal-version:      1.24
 name:               kleene
-version:            0.1.1
+version:            0.2
 synopsis:           Kleene algebra
 category:           Math
 description:
