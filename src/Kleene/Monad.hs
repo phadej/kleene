@@ -84,23 +84,20 @@ import           Kleene.Internal.Pretty
 -- ^..*.$
 --
 data M c
-    = MChars [c]        -- ^ One of the characters
-    | MAppend [M c]     -- ^ Concatenation
+    = MAppend [M c]     -- ^ Concatenation
     | MUnion [c] [M c]  -- ^ Union
     | MStar (M c)       -- ^ Kleene star
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 instance Applicative M where
-    pure = MChars . pure
+    pure = char
     (<*>) = ap
 
 instance Monad M where
     return = pure
 
-    MChars []    >>= _  = MChars []
-    MChars cs    >>= k  = appends (map k cs)
     MAppend rs   >>= k  = appends (map (>>= k) rs)
-    MUnion cs rs >>= k  = unions (map (>>= k) (MChars cs : rs))
+    MUnion cs rs >>= k  = unions (appends (map k cs) : map (>>= k) rs)
     MStar r      >>= k  = star (r >>= k)
 
 -------------------------------------------------------------------------------
@@ -115,7 +112,7 @@ instance Monad M where
 -- prop> match (empty :: M Char) (s :: String) === False
 --
 empty :: M c
-empty = MChars []
+empty = MUnion [] []
 
 -- | Empty string. /Note:/ different than 'empty'.
 --
@@ -136,7 +133,7 @@ eps = MAppend []
 -- ^x$
 --
 char :: c -> M c
-char = MChars . pure
+char c = MUnion [c] []
 
 -- | /Note:/ we know little about @c@.
 --
@@ -144,7 +141,7 @@ char = MChars . pure
 -- ^[abcdefghijklmnopqrstuvwxyz]$
 --
 charRange :: Enum c => c -> c -> M c
-charRange c c' = MChars [c .. c']
+charRange c c' = MUnion [c .. c'] []
 
 
 -- | Any character. /Note:/ different than dot!
@@ -153,7 +150,7 @@ charRange c c' = MChars [c .. c']
 -- ^[01]$
 --
 anyChar :: (Bounded c, Enum c) => M c
-anyChar = MChars [minBound .. maxBound]
+anyChar = MUnion [minBound .. maxBound] []
 
 -- | Concatenate regular expressions.
 --
@@ -176,17 +173,11 @@ appends rs0
 --
 unions :: [M c] -> M c
 unions = uncurry mk . foldMap f where
-    mk cs rss
-        | null rss = MChars cs
-        | null cs = case rss of
-            []  -> empty
-            [r] -> r
-            _   -> MUnion cs rss
-        | otherwise    = MUnion cs rss
-
     f (MUnion cs rs) = (cs, rs)
-    f (MChars cs)    = (cs, [])
     f r              = ([], [r])
+
+    mk [] [r] = r
+    mk cs rs = MUnion cs rs
 
 -- | Kleene star.
 --
@@ -194,9 +185,7 @@ star :: M c -> M c
 star r = case r of
     MStar _                    -> r
     MAppend []                 -> eps
-    MChars cs | null cs        -> eps
     MUnion cs rs | any isEps rs -> case rs' of
-        []             -> star (MChars cs)
         [r'] | null cs -> star r'
         _              -> MStar (MUnion cs rs')
       where
@@ -216,8 +205,8 @@ star r = case r of
 --
 string :: [c] -> M c
 string []  = eps
-string [c] = MChars [c]
-string cs  = MAppend $ map (MChars . pure) cs
+string [c] = char c
+string cs  = MAppend $ map char cs
 
 instance C.Kleene  (M c) where
     empty      = empty
@@ -246,7 +235,6 @@ instance C.CharKleene c (M c) where
 -- False
 --
 nullable :: M c -> Bool
-nullable (MChars _)      = False
 nullable (MAppend rs)    = all nullable rs
 nullable (MUnion _cs rs) = any nullable rs
 nullable (MStar _)       = True
@@ -265,7 +253,6 @@ nullable (MStar _)       = True
 -- ^yz(xyz)*$
 --
 derivate :: (Eq c, Enum c, Bounded c) => c -> M c -> M c
-derivate c (MChars cs)     = derivateChars c cs
 derivate c (MUnion cs rs)  = unions $ derivateChars c cs : [ derivate c r | r <- toList rs]
 derivate c (MAppend rs)    = derivateAppend c rs
 derivate c rs@(MStar r)    = derivate c r <> rs
@@ -298,8 +285,8 @@ instance (Eq c, Enum c, Bounded c) => C.Match c (M c) where
 
 -- | Whether 'M' is (structurally) equal to 'empty'.
 isEmpty :: M c -> Bool
-isEmpty (MChars rs) = null rs
-isEmpty _           = False
+isEmpty (MUnion cs rs) = null cs && null rs
+isEmpty _              = False
 
 -- | Whether 'M' is (structurally) equal to 'eps'.
 isEps :: M c -> Bool
@@ -320,7 +307,7 @@ isEps _            = False
 --
 -- >>> example $ star $ unions ["a", "b"]
 -- ""
--- "abababaaba"
+-- "aaababaaab"
 -- "a"
 --
 -- xx >>> example empty
@@ -337,7 +324,6 @@ generate seed re
 
 generator :: M c -> QC.Gen [c]
 generator = go where
-    go (MChars cs)    = goChars cs
     go (MAppend rs)   = concat <$> traverse go rs
     go (MUnion cs rs)
         | null cs   = QC.oneof [ go r | r <- toList rs ]
@@ -362,7 +348,6 @@ generator = go where
 -- ^[a-z]$
 --
 toKleene :: C.CharKleene c k => M c -> k
-toKleene (MChars cs)    = C.oneof cs
 toKleene (MAppend rs)   = C.appends (map toKleene rs)
 toKleene (MUnion cs rs) = C.unions (C.oneof cs : map toKleene rs)
 toKleene (MStar r)      = C.star (toKleene r)
@@ -385,7 +370,7 @@ instance c ~ Char => IsString (M c) where
 instance (Eq c, Enum c, Bounded c, QC.Arbitrary c) => QC.Arbitrary (M c) where
     arbitrary = QC.sized arb where
         c :: QC.Gen (M c)
-        c = MChars <$> QC.arbitrary
+        c = char <$> QC.arbitrary
 
         arb :: Int -> QC.Gen (M c)
         arb n | n <= 0    = QC.oneof [c, fmap char QC.arbitrary, pure eps]
@@ -401,7 +386,6 @@ instance (Eq c, Enum c, Bounded c, QC.Arbitrary c) => QC.Arbitrary (M c) where
             n2 = n `div` 2
 
 instance (QC.CoArbitrary c) => QC.CoArbitrary (M c) where
-    coarbitrary (MChars cs)    = QC.variant (0 :: Int) . QC.coarbitrary cs
     coarbitrary (MAppend rs)   = QC.variant (1 :: Int) . QC.coarbitrary rs
     coarbitrary (MUnion cs rs) = QC.variant (2 :: Int) . QC.coarbitrary (cs, rs)
     coarbitrary (MStar r)      = QC.variant (3 :: Int) . QC.coarbitrary r
@@ -420,11 +404,9 @@ instance (Pretty c, Eq c) => Pretty (M c) where
         go p (MAppend rs)
             = parens p $ goMany id rs
         go p (MUnion cs rs)
-            | null cs   = goUnion p rs
             | null rs   = prettySList cs
-            | otherwise = goUnion p (MChars cs : rs)
-        go _ (MChars cs)
-            = prettySList cs
+            | null cs   = goUnion p rs
+            | otherwise = goUnion p (MUnion cs [] : rs)
 
         goUnion p rs
             | elem eps rs = parens p $ goUnion' True . showChar '?'

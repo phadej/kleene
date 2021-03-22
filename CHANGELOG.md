@@ -1,3 +1,7 @@
+## 0.2
+
+* Remove MChars constructor from Monad variant
+
 ## 0.1.1
 
 * Export `Kleene.Functor.NonEmpty.few1`
