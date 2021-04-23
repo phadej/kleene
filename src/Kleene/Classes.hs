@@ -6,6 +6,7 @@ module Kleene.Classes where
 import Prelude ()
 import Prelude.Compat
 
+import Algebra.Lattice                    (Lattice (..))
 import Data.Char                          (ord)
 import Data.Foldable                      (toList)
 import Data.Function.Step.Discrete.Closed (SF)
@@ -123,3 +124,6 @@ instance ToLatin1 RSet where
         f (a, b)
             | ord a >= 256 = Nothing
             | otherwise    = Just (fromIntegral (ord a), fromIntegral (min 255 (ord b)))
+
+disjoint :: (Kleene k, Equivalent c k, Lattice k) => k -> k -> Bool
+disjoint a b = equivalent empty (a /\ b)
