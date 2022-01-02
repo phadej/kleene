@@ -31,6 +31,7 @@ tested-with:
    || ==8.8.4
    || ==8.10.4
    || ==9.0.1
+   || ==9.2.1
 
 source-repository head
   type:     git
@@ -43,14 +44,14 @@ library
 
   -- GHC boot libraries
   build-depends:
-      base          >=4.7.0.2  && <4.16
+      base          >=4.7.0.2  && <4.17
     , bytestring    >=0.10.4.0 && <0.12
     , containers    >=0.5.5.1  && <0.7
-    , text          >=1.2.3.0  && <1.3
+    , text          >=1.2.3.0  && <1.3 || >=2.0 && <2.1
     , transformers  >=0.3.0.0  && <0.6
 
   if !impl(ghc >=8.0)
-    build-depends: semigroups >=0.18.5 && <0.20
+    build-depends: semigroups >=0.18.5 && <0.21
 
   -- Other dependencies
   build-depends:
