@@ -201,7 +201,7 @@ appends rs0
     rs1 = concatMap f rs0
 
     f (EREAppend rs) = rs
-    f r             = [r]
+    f r              = [r]
 
 -- | Union of regular expressions.
 --

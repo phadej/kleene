@@ -1,4 +1,4 @@
-cabal-version:      1.24
+cabal-version:      2.4
 name:               kleene
 version:            0.2
 synopsis:           Kleene algebra
@@ -16,7 +16,7 @@ homepage:           https://github.com/phadej/kleene
 bug-reports:        https://github.com/phadej/kleene/issues
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg Grenrus <oleg.grenrus@iki.fi>
-license:            BSD3
+license:            BSD-3-Clause
 license-file:       LICENSE
 build-type:         Simple
 extra-source-files: CHANGELOG.md
@@ -31,8 +31,8 @@ tested-with:
    || ==8.8.4
    || ==8.10.7
    || ==9.0.2
-   || ==9.2.4
-   || ==9.4.1
+   || ==9.2.5
+   || ==9.4.4
 
 source-repository head
   type:     git
@@ -45,10 +45,10 @@ library
 
   -- GHC boot libraries
   build-depends:
-      base          >=4.7.0.2  && <4.18
+    , base          >=4.7.0.2  && <4.18
     , bytestring    >=0.10.4.0 && <0.12
     , containers    >=0.5.5.1  && <0.7
-    , text          >=1.2.3.0  && <1.3 || >=2.0 && <2.1
+    , text          >=1.2.3.0  && <1.3  || >=2.0 && <2.1
     , transformers  >=0.3.0.0  && <0.6
 
   if !impl(ghc >=8.0)
@@ -56,7 +56,7 @@ library
 
   -- Other dependencies
   build-depends:
-      attoparsec
+    , attoparsec
     , base-compat        >=0.10.5   && <0.13
     , lattices           >=2        && <2.2
     , MemoTrie           >=0.6.9    && <0.7
@@ -101,3 +101,23 @@ library
 
   x-docspec-options:
     -XOverloadedStrings --check-properties "--property-variables=c p r s t q"
+
+test-suite kleene-utf8
+  default-language: Haskell2010
+  ghc-options:      -Wall
+  hs-source-dirs:   tests
+  type:             exitcode-stdio-1.0
+  main-is:          kleene-utf8.hs
+  build-depends:
+    , base
+    , bytestring
+    , kleene
+
+  if !impl(ghc >=8.0)
+    build-depends: semigroups >=0.18.5 && <0.21
+
+  -- test dependencies
+  build-depends:
+    , tasty             ^>=1.4.0.3
+    , tasty-hunit       ^>=0.10.0.3
+    , tasty-quickcheck  ^>=0.10.1.2
