@@ -191,10 +191,10 @@ appends rs0
         [r] -> r
         rs  -> REAppend rs
   where
-    -- flatten one level of REAppend
     rs1 = concatMap f rs0
 
-    f (REAppend rs) = rs
+    f :: RE c -> [RE c]
+    f (REAppend rs) = concatMap f rs
     f r             = [r]
 
 -- | Union of regular expressions.
