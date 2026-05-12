@@ -3,9 +3,6 @@
 {-# LANGUAGE GADTs                  #-}
 module Kleene.Classes where
 
-import Prelude ()
-import Prelude.Compat
-
 import Data.Char                          (ord)
 import Data.Foldable                      (toList)
 import Data.Function.Step.Discrete.Closed (SF)

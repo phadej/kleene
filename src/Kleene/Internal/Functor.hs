@@ -26,9 +26,6 @@ module Kleene.Internal.Functor (
     toRA,
     ) where
 
-import Prelude ()
-import Prelude.Compat
-
 import Control.Applicative (Alternative (..), liftA2)
 import Data.Foldable       (toList)
 import Data.Functor.Apply  (Apply (..))

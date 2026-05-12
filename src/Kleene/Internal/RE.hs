@@ -39,10 +39,6 @@ module Kleene.Internal.RE (
     nullableProof,
     ) where
 
-import Data.Semigroup (Semigroup (..))
-import Prelude ()
-import Prelude.Compat
-
 import Control.Applicative (liftA2)
 import Data.Foldable       (toList)
 import Data.List           (foldl')

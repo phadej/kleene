@@ -41,10 +41,6 @@ module Kleene.ERE (
     isEverything,
     ) where
 
-import Data.Semigroup (Semigroup (..))
-import Prelude ()
-import Prelude.Compat
-
 import Algebra.Lattice
        (BoundedJoinSemiLattice (..), BoundedMeetSemiLattice (..), Lattice (..))
 import Control.Applicative (liftA2)

@@ -19,9 +19,6 @@ module Kleene.DFA (
     toDot',
     ) where
 
-import Prelude ()
-import Prelude.Compat
-
 import Algebra.Lattice
        (BoundedJoinSemiLattice (..), BoundedMeetSemiLattice (..), Lattice (..))
 import Data.IntMap       (IntMap)
