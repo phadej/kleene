@@ -6,9 +6,6 @@ module Kleene.Internal.Pretty (
     putPretty,
     ) where
 
-import Prelude ()
-import Prelude.Compat
-
 import Data.Monoid          (Endo (..))
 import Data.RangeSet.Map    (RSet)
 import Kleene.Internal.Sets (dotRSet)

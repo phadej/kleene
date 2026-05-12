@@ -2,10 +2,6 @@
 {-# OPTIONS_HADDOCK not-home #-}
 module Kleene.Internal.Partition where
 
-import Data.Semigroup (Semigroup (..))
-import Prelude ()
-import Prelude.Compat
-
 import Data.Foldable      (toList)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.RangeSet.Map  (RSet)

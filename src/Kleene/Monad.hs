@@ -37,10 +37,6 @@ module Kleene.Monad (
     isEps,
     ) where
 
-import Data.Semigroup (Semigroup (..))
-import Prelude ()
-import Prelude.Compat
-
 import Control.Applicative (liftA2)
 import Control.Monad       (ap)
 import Data.Foldable       (toList)

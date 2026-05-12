@@ -26,9 +26,6 @@ module Kleene.Functor.NonEmpty (
     nullableProof,
     ) where
 
-import Prelude ()
-import Prelude.Compat
-
 import Control.Applicative (Alternative (..), liftA2)
 import Data.Foldable       (toList)
 import Data.Functor.Alt    ((<!>))
